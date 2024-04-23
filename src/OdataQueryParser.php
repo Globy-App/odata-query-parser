@@ -4,88 +4,54 @@ declare(strict_types=1);
 
 namespace Khalyomede;
 
-use RuntimeException;
 use InvalidArgumentException;
-use League\Uri\Parser\QueryString;
 
 class OdataQueryParser {
-	const COUNT_KEY = "count";
-	const FILTER_KEY = "filter";
-	const FORMAT_KEY = "format";
-	const ORDER_BY_KEY = "orderby";
-	const SELECT_KEY = "select";
-	const SKIP_KEY = "skip";
-	const TOP_KEY = "top";
+	private const COUNT_KEY = "count";
+	private const FILTER_KEY = "filter";
+	private const FORMAT_KEY = "format";
+	private const ORDER_BY_KEY = "orderby";
+	private const SELECT_KEY = "select";
+	private const SKIP_KEY = "skip";
+	private const TOP_KEY = "top";
 
-	/**
-	 * @var string
-	 */
-	private static $url = "";
+	private static string $url = "";
+	private static string $queryString = "";
+	private static array $queryStrings = [];
+	private static bool $withDollar = false;
+	private static string $selectKey = "";
+	private static string $countKey = "";
+	private static string $filterKey = "";
+	private static string $formatKey = "";
+	private static string $orderByKey = "";
+	private static string $skipKey = "";
+	private static string $topKey = "";
 
-	/**
-	 * @var string
-	 */
-	private static $queryString = "";
-
-	/**
-	 * @var array
-	 */
-	private static $queryStrings = [];
-
-	/**
-	 * @var bool
-	 */
-	private static $withDollar = false;
-
-	/**
-	 * @var string
-	 */
-	private static $selectKey = "";
-
-	/**
-	 * @var string
-	 */
-	private static $countKey = "";
-
-	/**
-	 * @var string
-	 */
-	private static $filterKey = "";
-
-	/**
-	 * @var string
-	 */
-	private static $formatKey = "";
-
-	/**
-	 * @var string
-	 */
-	private static $orderByKey = "";
-
-	/**
-	 * @var string
-	 */
-	private static $skipKey = "";
-
-	/**
-	 * @var string
-	 */
-	private static $topKey = "";	
-
+    /**
+     * Parses a given URL, returns an associative array with the odata parts of the URL.
+     *
+     * @param string $url The URL to parse the query strings from. It should be a "complete" or "full" URL, which means that http://example.com will pass while example.com will not pass.
+     * @param bool $withDollar When set to false, parses the odata keys without requiring the $ in front of odata keys.
+     *
+     * @return array The associative array containing the different odata keys.
+     */
 	public static function parse(string $url, bool $withDollar = true): array {
 		$output = [];
 
+        // Set the options and url
 		static::$url = $url;
 		static::$withDollar = $withDollar;
 
-		if (static::urlInvalid()) {
+        // Verify the URL is valid
+		if (\filter_var(static::$url, FILTER_VALIDATE_URL) === false) {
 			throw new InvalidArgumentException('url should be a valid url');
 		}
-		
+
 		static::setQueryStrings();
 
 		static::setQueryParameterKeys();
 
+        // Extract the different odata keys and store them in the output array
 		if (static::selectQueryParameterIsValid()) {
 			$output["select"] = static::getSelectColumns();
 		}
@@ -237,14 +203,14 @@ class OdataQueryParser {
 		return array_map(function($and) {
 			$items = [];
 
-			preg_match("/([\w]+)\s*(eq|ne|gt|ge|lt|le|in)\s*([\w',\(\)\s.]+)/", $and, $items);
+			preg_match("/(\w+)\s*(eq|ne|gt|ge|lt|le|in)\s*([\w',()\s.]+)/", $and, $items);
 
 			$left = $items[1];
 			$operator = static::getFilterOperatorName($items[2]);
 			$right = static::getFilterRightValue($operator, $items[3]);
 
 			/**
-			 * @todo check whether [1], [2] and [3] are set
+			 * @todo check whether [1], [2] and [3] are set -> will fix in a different PR
 			 */
 
 			return [
@@ -294,34 +260,19 @@ class OdataQueryParser {
 	}
 
 	private static function getFilterOperatorName(string $operator): string {
-		switch($operator) {
-			case $operator === "eq":
-				return "equal";
-			
-			case $operator === "ne":
-				return "notEqual";
-
-			case $operator === "gt":
-				return "greaterThan";
-
-			case $operator === "ge":
-				return "greaterOrEqual";
-
-			case $operator === "lt":
-				return "lowerThan";
-
-			case $operator === "le":
-				return "lowerOrEqual";
-			
-			case $operator === "in":
-				return "in";
-			
-			default:
-				return "unknown";
-		}
+        return match ($operator) {
+            "eq" => "equal",
+            "ne" => "notEqual",
+            "gt" => "greaterThan",
+            "ge" => "greaterOrEqual",
+            "lt" => "lowerThan",
+            "le" => "lowerOrEqual",
+            "in" => "in",
+            default => "unknown",
+        };
 	}
 
-	private static function getFilterRightValue(string $operator, string $value) {
+	private static function getFilterRightValue(string $operator, string $value): int|float|string|array {
 		if ($operator !== "in") {
 			if (is_numeric($value)) {
 				if ((int) $value != $value) {

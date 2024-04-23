@@ -3,7 +3,7 @@
 use PHPUnit\Framework\TestCase;
 use Khalyomede\OdataQueryParser;
 
-final class Parse extends TestCase {
+final class ParseTest extends TestCase {
 	public function testShouldReturnExceptionIfUrlIsEmpty(): void {
 		$this->expectException(InvalidArgumentException::class);
 		$this->expectExceptionMessage("url should be a valid url");
@@ -20,7 +20,7 @@ final class Parse extends TestCase {
 
 	public function testShouldReturnAnEmptyArrayIfNoQueryParameters(): void {
 		$expected = [];
-		$actual = OdataQueryParser::parse("http://example.com");
+		$actual = OdataQueryParser::parse("https://example.com");
 
 		$this->assertEquals($expected, $actual);
 	}
