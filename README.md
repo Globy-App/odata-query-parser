@@ -29,7 +29,7 @@ As I did not see a package exclusively dealing with parsing the query strings, a
 
 ## Requirements
 
-- PHP >= 8.1.0
+- PHP >= 8.2.0
 - [Composer](https://getcomposer.org/)
 
 ## Installation
