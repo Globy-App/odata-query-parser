@@ -5,6 +5,7 @@ bin
 mutation
 .phpunit.result.cache
 infection.log
+/.tmp
 
 ###> IDE/excludes ###
 

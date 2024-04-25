@@ -1,16 +1,21 @@
-name: CI
+name: CQ
 
 on:
   push:
     branches:
-      - master
+      - main
   pull_request:
     branches:
       - '*'
 
+permissions:
+  contents: read
+
 jobs:
-  testsuite:
-    runs-on: ubuntu-22.04
+  code-quality:
+    name: Coding standards, code quality and static code analysis
+    runs-on: ubuntu-latest
+
     strategy:
       fail-fast: false
       matrix:
@@ -23,13 +28,52 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php-version }}
-          extensions: intl
+          coverage: xdebug
+          extensions: dom
 
-      - name: Composer install
-        run: |
-          composer --version
-          composer install
+      - name: Validate composer.json and composer.lock
+        run: composer validate --strict
 
-      - name: Run PHPUnit
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress
+
+      - name: Run the linter
+        run: composer lint
+
+      - name: Run PHPStan
+        if: success() || failure()
+        run: composer phpstan -- --error-format=github > phpstan.json
+
+      - name: Run psalm
+        if: success() || failure()
+        run: composer psalm --output-format=github
+
+  integration-tests:
+    name: Test suite and coverage
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        php-version: ['8.1', '8.2', '8.3']
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-version }}
+          coverage: xdebug
+          extensions: dom
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress
+
+      - name: Run test suite
         run: |
-          vendor/bin/phpunit --configuration phpunit.xml test
+          if [[ ${{ matrix.php-version }} == '8.1' ]]; then
+            composer coverage --min=90 --coverage-clover=coverage.xml
+          else
+            composer pest
+          fi

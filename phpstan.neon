@@ -1,0 +1,14 @@
+parameters:
+    tmpDir: .tmp
+    level: 9
+    paths:
+        - src
+        - test
+        - examples
+    ignoreErrors:
+        -
+            message: '#Undefined variable: \$this#'
+            path: */tests/*
+
+includes:
+    - vendor/phpstan/phpstan-deprecation-rules/rules.neon
