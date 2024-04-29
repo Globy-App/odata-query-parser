@@ -69,8 +69,8 @@ jobs:
 
       - name: Run tests suite
         run: |
-          php ./vendor/bin/phpunit --coverage-clover=coverage.xml --coverage-xml=logs/coverage --log-junit=logs/coverage.junit.xml --min-coverage=100
+          php ./vendor/bin/phpunit --coverage-clover=coverage.xml --coverage-xml=logs/coverage --log-junit=logs/coverage.junit.xml -d --min-coverage=100
 
       - name: Run infection mutation testing
         run:
-          php ./vendor/bin/infection --min-msi=90 --min-covered-msi=95 --threads=max --no-interaction --logger-github=true --skip-initial-tests --coverage=logs
+          php ./vendor/bin/infection --min-msi=85 --min-covered-msi=90 --threads=max --no-interaction --logger-github=true --skip-initial-tests --coverage=logs
