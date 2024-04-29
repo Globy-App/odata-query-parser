@@ -2,8 +2,7 @@ parameters:
     tmpDir: .tmp
     level: 9
     paths:
-        - src
-        - test
+        - tests
         - examples
 
 includes:

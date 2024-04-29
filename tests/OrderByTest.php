@@ -3,6 +3,7 @@
 namespace OdataQueryParserTests;
 
 use GlobyApp\OdataQueryParser;
+use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 
 final class OrderByTest extends TestCase
