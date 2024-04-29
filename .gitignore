@@ -5,6 +5,7 @@ bin
 mutation
 .phpunit.result.cache
 infection.log
+/.tmp
 
 ###> IDE/excludes ###
 
@@ -66,3 +67,9 @@ pom.xml.releaseBackup
 pom.xml.tag
 
 ###< IDE/excludes ###
+
+/infection-log.json
+composer.phar
+*.cache
+logs/
+/coverage.xml

@@ -1,0 +1,9 @@
+parameters:
+    tmpDir: .tmp
+    level: 9
+    paths:
+        - tests
+        - examples
+
+includes:
+    - vendor/phpstan/phpstan-deprecation-rules/rules.neon
