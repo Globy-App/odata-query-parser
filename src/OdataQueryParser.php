@@ -6,6 +6,11 @@ namespace GlobyApp;
 
 use InvalidArgumentException;
 
+/**
+ * The actual parser class that can parse an odata url
+ * @api
+ * @package GlobyApp\OdataQueryParser
+ */
 class OdataQueryParser
 {
     private const COUNT_KEY = "count";
@@ -128,11 +133,6 @@ class OdataQueryParser
 
 
         return $output;
-    }
-
-    private static function urlInvalid(): bool
-    {
-        return \filter_var(static::$url, FILTER_VALIDATE_URL) === false;
     }
 
     private static function setQueryStrings(): void
