@@ -2,7 +2,7 @@
 
 Parse OData v4 query strings, outputs proper PHP objects.
 
-[![Packagist Version](https://img.shields.io/packagist/v/globyapp/odata-query-parser)](https://packagist.org/packages/globyapp/odata-query-parser) [![Packagist](https://img.shields.io/packagist/l/globyapp/odata-query-parser)](https://github.com/globyapp/odata-query-parser/blob/master/LICENSE) [![PHP from Packagist](https://img.shields.io/packagist/php-v/globyapp/odata-query-parser)](https://github.com/globyapp/odata-query-parser/blob/master/composer.json#L14) [![CI](https://github.com/Globy-App/odata-query-parser/actions/workflows/ci.yml/badge.svg)](https://github.com/Globy-App/odata-query-parser/actions/workflows/ci.yml)
+[![Packagist Version](https://img.shields.io/packagist/v/globyapp/odata-query-parser)](https://packagist.org/packages/globyapp/odata-query-parser) [![Packagist](https://img.shields.io/packagist/l/globyapp/odata-query-parser)](https://github.com/Globy-App/odata-query-parser/blob/master/LICENSE) [![PHP from Packagist](https://img.shields.io/packagist/php-v/globyapp/odata-query-parser)](https://github.com/globyapp/odata-query-parser/blob/master/composer.json#L14) [![CI](https://github.com/Globy-App/odata-query-parser/actions/workflows/ci.yml/badge.svg)](https://github.com/Globy-App/odata-query-parser/actions/workflows/ci.yml)
 
 ## Summary
 
