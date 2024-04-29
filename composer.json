@@ -1,6 +1,6 @@
 {
-  "name": "khalyomede/odata-query-parser",
-  "description": "Parse OData v4 query strings.",
+  "name": "globyapp/odata-query-parser",
+  "description": "Parse OData v4 query strings, outputs proper PHP objects.",
   "type": "library",
   "license": "MIT",
   "authors": [
@@ -15,21 +15,50 @@
   ],
   "minimum-stability": "stable",
   "require": {
-    "php": ">=8.1.0"
+    "php": ">=8.2"
   },
   "require-dev": {
     "phpunit/phpunit": "10.*",
     "friendsofphp/php-cs-fixer": "^3.16",
     "phpstan/phpstan": "^1.10",
     "phpstan/phpstan-deprecation-rules": "^1.1",
-    "vimeo/psalm": "^5.23"
+    "vimeo/psalm": "^5.23",
+    "infection/infection": "^0.27.11"
   },
   "autoload": {
     "psr-4": {
-      "Khalyomede\\": "src"
+      "GlobyApp\\OdataQueryParser\\": "src/"
     }
   },
+  "scripts": {
+    "test": [
+      "composer exec phpunit"
+    ],
+    "lint": [
+      "vendor/bin/php-cs-fixer fix src --dry-run --allow-risky=yes"
+    ],
+    "lint:fix": [
+      "vendor/bin/php-cs-fixer fix src --allow-risky=yes"
+    ],
+    "phpstan": [
+      "php -d memory_limit=1G ./vendor/bin/phpstan analyse -c phpstan.neon"
+    ],
+    "psalm": [
+      "php ./vendor/bin/psalm"
+    ],
+    "phpunit": [
+      "php ./vendor/bin/phpunit"
+    ],
+    "coverage": [
+      "php ./vendor/bin/phpunit --coverage"
+    ],
+    "infection": [
+      "php ./vendor/bin/infection"
+    ]
+  },
   "config": {
-    "bin-dir": "vendor/bin"
+    "allow-plugins": {
+      "infection/extension-installer": true
+    }
   }
 }

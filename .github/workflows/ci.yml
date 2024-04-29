@@ -28,8 +28,6 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php-version }}
-          coverage: xdebug
-          extensions: dom
 
       - name: Validate composer.json and composer.lock
         run: composer validate --strict
@@ -38,15 +36,15 @@ jobs:
         run: composer install --prefer-dist --no-progress
 
       - name: Run the linter
-        run: composer lint
+        run: php ./vendor/bin/php-cs-fixer fix src --dry-run --allow-risky=yes
 
       - name: Run PHPStan
         if: success() || failure()
-        run: composer phpstan -- --error-format=github > phpstan.json
+        run: php -d memory_limit=1G ./vendor/bin/phpstan analyse -c phpstan.neon --error-format=github > phpstan.json
 
       - name: Run psalm
         if: success() || failure()
-        run: composer psalm --output-format=github
+        run: php ./vendor/bin/psalm --output-format=github
 
   integration-tests:
     name: Test suite and coverage
@@ -64,16 +62,15 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php-version }}
-          coverage: xdebug
-          extensions: dom
+          coverage: pcov
 
       - name: Install dependencies
         run: composer install --prefer-dist --no-progress
 
-      - name: Run test suite
+      - name: Run tests suite
         run: |
-          if [[ ${{ matrix.php-version }} == '8.1' ]]; then
-            composer coverage --min=90 --coverage-clover=coverage.xml
-          else
-            composer pest
-          fi
+          php ./vendor/bin/phpunit --coverage-clover=coverage.xml --coverage-xml=logs/coverage --log-junit=logs/coverage.junit.xml --min-coverage=100
+
+      - name: Run infection mutation testing
+        run:
+          php ./vendor/bin/infection --min-msi=90 --min-covered-msi=95 --threads=max --no-interaction --logger-github=true --skip-initial-tests --coverage=logs
