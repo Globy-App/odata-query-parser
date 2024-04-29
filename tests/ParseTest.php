@@ -1,7 +1,10 @@
 <?php
 
+namespace OdataQueryParserTests;
+
+use GlobyApp\OdataQueryParser;
+use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
-use Khalyomede\OdataQueryParser;
 
 final class ParseTest extends TestCase {
 	public function testShouldReturnExceptionIfUrlIsEmpty(): void {

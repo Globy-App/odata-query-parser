@@ -1,8 +1,8 @@
 # odata-query-parser
 
-Parse OData v4 query strings.
+Parse OData v4 query strings, outputs proper PHP objects.
 
-[![Packagist Version](https://img.shields.io/packagist/v/khalyomede/odata-query-parser)](https://packagist.org/packages/khalyomede/odata-query-parser) [![Packagist](https://img.shields.io/packagist/l/khalyomede/odata-query-parser)](https://github.com/khalyomede/odata-query-parser/blob/master/LICENSE) [![PHP from Packagist](https://img.shields.io/packagist/php-v/khalyomede/odata-query-parser)](https://github.com/khalyomede/odata-query-parser/blob/master/composer.json#L14) [![Build Status](https://travis-ci.com/khalyomede/odata-query-parser.svg?branch=master)](https://travis-ci.com/khalyomede/odata-query-parser) [![Maintainability](https://api.codeclimate.com/v1/badges/1ca8f176fedec7db81a2/maintainability)](https://codeclimate.com/github/khalyomede/odata-query-parser/maintainability) [![Known Vulnerabilities](https://snyk.io/test/github/khalyomede/odata-query-parser/badge.svg?targetFile=composer.lock)](https://snyk.io/test/github/khalyomede/odata-query-parser?targetFile=composer.lock)
+[![Packagist Version](https://img.shields.io/packagist/v/globyapp/odata-query-parser)](https://packagist.org/packages/globyapp/odata-query-parser) [![Packagist](https://img.shields.io/packagist/l/globyapp/odata-query-parser)](https://github.com/globyapp/odata-query-parser/blob/master/LICENSE) [![PHP from Packagist](https://img.shields.io/packagist/php-v/globyapp/odata-query-parser)](https://github.com/globyapp/odata-query-parser/blob/master/composer.json#L14) [![CI](https://github.com/Globy-App/odata-query-parser/actions/workflows/ci.yml/badge.svg)](https://github.com/Globy-App/odata-query-parser/actions/workflows/ci.yml)
 
 ## Summary
 
@@ -37,7 +37,7 @@ As I did not see a package exclusively dealing with parsing the query strings, a
 Add the package to your dependencies:
 
 ```bash
-composer require khalyomede/odata-query-parser
+composer require globyapp/odata-query-parser
 ```
 
 ## Examples
@@ -50,7 +50,7 @@ composer require khalyomede/odata-query-parser
 In this example, we will use the `$select` OData query string command to filter the fields returned by our API.
 
 ```php
-use Khalyomede\OdataQueryParser;
+use GlobyApp\OdataQueryParser;
 
 $data = OdataQueryParser::parse('https://example.com/api/user?$select=id,name,age');
 ```
@@ -72,7 +72,7 @@ If you inspect `$data`, this is what you will get:
 In this example, we will use a unique feature of this library: to be able to not specify any dollar, while still being able to use the OData v4 URL query parameter grammar.
 
 ```php
-use Khalyomede/OdataQueryParser;
+use GlobyApp\OdataQueryParser;
 
 $data = OdataQueryParser::parse("https://example.com/api/user?select=id,name,age", $withDollar = false);
 ```
