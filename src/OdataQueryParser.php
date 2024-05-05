@@ -221,7 +221,11 @@ class OdataQueryParser
     private static function getCount(array $queryString): ?bool
     {
         if (!self::validateWithFilterValidate($queryString, self::$count, FILTER_VALIDATE_BOOLEAN)) {
-            return null;
+            // 0 and 1 are also valid values for a boolean
+            if (!(array_key_exists(self::$count, $queryString)
+                && (trim($queryString[self::$count]) === '0' || trim($queryString[self::$count]) === '1'))) {
+                return null;
+            }
         }
 
         return boolval(trim($queryString[self::$count]));
@@ -397,7 +401,7 @@ class OdataQueryParser
      *
      * @return int|float|string|bool|null|array<int|float|string|bool|null> Either a native php datatype, or an array with a mix or native php datatypes
      */
-    public static function getFilterRightValue(string $value, FilterOperator $operator): int|float|string|bool|null|array
+    private static function getFilterRightValue(string $value, FilterOperator $operator): int|float|string|bool|null|array
     {
         if ($operator === FilterOperator::IN) {
             // Remove the start and end bracket, including possible whitespace from the list

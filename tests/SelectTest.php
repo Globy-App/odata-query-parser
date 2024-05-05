@@ -13,6 +13,7 @@ final class SelectTest extends TestCase
         $actual = OdataQueryParser\OdataQueryParser::parse('https://example.com/users?$select=name,type,userId');
 
         $this->assertEquals($expected, $actual);
+        $this->assertEquals($expected->getSelect(), $actual->getSelect());
     }
 
     public function testShouldReturnSelectColumnsIfFilledWithSpaces(): void
@@ -21,6 +22,7 @@ final class SelectTest extends TestCase
         $actual = OdataQueryParser\OdataQueryParser::parse('https://example.com/api/user?$select=%20name,%20type%20,userId%20');
 
         $this->assertEquals($expected, $actual);
+        $this->assertEquals($expected->getSelect(), $actual->getSelect());
     }
 
     public function testShouldReturnTheColumnsInNonDollarMode(): void
@@ -29,6 +31,7 @@ final class SelectTest extends TestCase
         $actual = OdataQueryParser\OdataQueryParser::parse('https://example.com/?select=name,type,userId', false);
 
         $this->assertEquals($expected, $actual);
+        $this->assertEquals($expected->getSelect(), $actual->getSelect());
     }
 
     public function testShouldReturnTheColumnsIfFilledWithSpacesInNonDollarMode(): void
@@ -37,6 +40,7 @@ final class SelectTest extends TestCase
         $actual = OdataQueryParser\OdataQueryParser::parse('https://example.com/api/user?select=%20name,%20type%20,userId%20', false);
 
         $this->assertEquals($expected, $actual);
+        $this->assertEquals($expected->getSelect(), $actual->getSelect());
     }
 
     public function testShouldReturnAnEmptyArrayIfNoColumnFound(): void
@@ -44,6 +48,7 @@ final class SelectTest extends TestCase
         $expected = new OdataQueryParser\OdataQuery();
         $actual = OdataQueryParser\OdataQueryParser::parse('https://example.com/?$select=');
 
+        $this->assertEquals($expected->getSelect(), $actual->getSelect());
         $this->assertEquals($expected, $actual);
     }
 
@@ -53,5 +58,6 @@ final class SelectTest extends TestCase
         $actual = OdataQueryParser\OdataQueryParser::parse('https://example.com/?select=');
 
         $this->assertEquals($expected, $actual);
+        $this->assertEquals($expected->getSelect(), $actual->getSelect());
     }
 }

@@ -62,7 +62,7 @@ class OdataQuery
     /**
      * @return bool|null Whether the amount of results should be included in the request
      */
-    public function isCount(): ?bool
+    public function getCount(): ?bool
     {
         return $this->count;
     }
