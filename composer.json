@@ -29,7 +29,8 @@
     "phpstan/phpstan": "^1.10",
     "phpstan/phpstan-deprecation-rules": "^1.1",
     "vimeo/psalm": "^5.23",
-    "infection/infection": "^0.27.11"
+    "infection/infection": "^0.27.11",
+    "ext-simplexml": "*"
   },
   "autoload-dev": {
     "psr-4": {

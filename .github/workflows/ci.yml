@@ -69,7 +69,11 @@ jobs:
 
       - name: Run tests suite
         run: |
-          php ./vendor/bin/phpunit --coverage-clover=coverage.xml --coverage-xml=logs/coverage --log-junit=logs/coverage.junit.xml -d --min-coverage=100
+          php ./vendor/bin/phpunit --coverage-clover=coverage.xml --coverage-xml=logs/coverage --log-junit=logs/coverage.junit.xml
+
+      - name: Ensure every line is covered by tests
+        run: |
+          php tests/phpunit-coverage.php 100
 
       - name: Run infection mutation testing
         run:
