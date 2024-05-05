@@ -11,19 +11,19 @@ final class ParseTest extends TestCase {
 		$this->expectException(InvalidArgumentException::class);
 		$this->expectExceptionMessage("url should be a valid url");
 
-		OdataQueryParser::parse('');
+        OdataQueryParser\OdataQueryParser::parse('');
 	}
 
 	public function testShouldReturnExceptionIfUrlIsNotValid(): void {
 		$this->expectException(InvalidArgumentException::class);
 		$this->expectExceptionMessage("url should be a valid url");
 
-		OdataQueryParser::parse('example.com');
+        OdataQueryParser\OdataQueryParser::parse('example.com');
 	}
 
 	public function testShouldReturnAnEmptyArrayIfNoQueryParameters(): void {
 		$expected = [];
-		$actual = OdataQueryParser::parse("https://example.com");
+		$actual = OdataQueryParser\OdataQueryParser::parse("https://example.com");
 
 		$this->assertEquals($expected, $actual);
 	}
