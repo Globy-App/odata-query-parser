@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace GlobyApp;
 
+use GlobyApp\OdataQueryParser\OdataQuery;
 use InvalidArgumentException;
 
 /**
@@ -13,61 +14,54 @@ use InvalidArgumentException;
  */
 class OdataQueryParser
 {
-    private const COUNT_KEY = "count";
-    private const FILTER_KEY = "filter";
-    private const FORMAT_KEY = "format";
-    private const ORDER_BY_KEY = "orderby";
-    private const SELECT_KEY = "select";
-    private const SKIP_KEY = "skip";
-    private const TOP_KEY = "top";
-
-    private static string $url = "";
-    private static string $queryString = "";
-    private static array $queryStrings = [];
-    private static bool $withDollar = false;
-    private static string $selectKey = "";
-    private static string $countKey = "";
-    private static string $filterKey = "";
-    private static string $formatKey = "";
-    private static string $orderByKey = "";
-    private static string $skipKey = "";
-    private static string $topKey = "";
+    private static string $select;
+    private static string $count;
+    private static string $filter;
+    private static string $orderBy;
+    private static string $skip;
+    private static string $top;
 
     /**
-     * Parses a given URL, returns an associative array with the odata parts of the URL.
+     * Parses a given URL, returns a result object with the odata parts of the URL.
      *
-     * @param string $url The URL to parse the query strings from. It should be a "complete" or "full" URL, which means that http://example.com will pass while example.com will not pass.
-     * @param bool $withDollar When set to false, parses the odata keys without requiring the $ in front of odata keys.
+     * Usage:
+     * ```
+     * OdataQueryParser::parse("http://example.com?$select=[field]", true)
+     * ```
      *
-     * @return array The associative array containing the different odata keys.
+     * @param string $url The URL to parse the query strings from. It should be a "complete" or "full" URL
+     * @param bool $withDollar When set to false, parses the odata keys without requiring the $ in front of odata keys
+     *
+     * @return OdataQuery|null OdataQuery object, parsed version of the input url, or null, if there is no query string
+     * @throws InvalidArgumentException The URL is malformed and could not be processed
      */
-    public static function parse(string $url, bool $withDollar = true): array
+    public static function parse(string $url, bool $withDollar = true): ?OdataQuery
     {
-        $output = [];
-
-        // Set the options and url
-        static::$url = $url;
-        static::$withDollar = $withDollar;
-
         // Verify the URL is valid
-        if (\filter_var(static::$url, FILTER_VALIDATE_URL) === false) {
-            throw new InvalidArgumentException('url should be a valid url');
+        if (\filter_var($url, FILTER_VALIDATE_URL) === false) {
+            throw new InvalidArgumentException('Url should be a valid, full URL.');
         }
 
-        static::setQueryStrings();
+        // Extract the query string from the URL and parse it into it's components
+        $queryString = self::extractQueryString($url);
+        if ($queryString === null) {
+            // There is no query string, so there cannot be a result
+            return null;
+        }
 
-        static::setQueryParameterKeys();
+        $parsedQueryString = self::parseQueryString($queryString);
+        self::setKeyConstants($withDollar);
 
         // Extract the different odata keys and store them in the output array
-        if (static::selectQueryParameterIsValid()) {
+        if (self::selectQueryParameterIsValid($parsedQueryString)) {
             $output["select"] = static::getSelectColumns();
         }
 
-        if (static::countQueryParameterIsValid()) {
+        if (static::countQueryParameterIsValid($parsedQueryString)) {
             $output["count"] = true;
         }
 
-        if (static::topQueryParameterIsValid()) {
+        if (static::topQueryParameterIsValid($parsedQueryString)) {
             $top = static::getTopValue();
 
             if (!\is_numeric($top)) {
@@ -83,7 +77,7 @@ class OdataQueryParser
             $output["top"] = (int) $top;
         }
 
-        if (static::skipQueryParameterIsValid()) {
+        if (static::skipQueryParameterIsValid($parsedQueryString)) {
             $skip = static::getSkipValue();
 
             if (!\is_numeric($skip)) {
@@ -99,7 +93,7 @@ class OdataQueryParser
             $output["skip"] = (int) $skip;
         }
 
-        if (static::orderByQueryParameterIsValid()) {
+        if (static::orderByQueryParameterIsValid($parsedQueryString)) {
             $items = static::getOrderByColumnsAndDirections();
 
             $orderBy = \array_map(function ($item) {
@@ -125,7 +119,7 @@ class OdataQueryParser
             $output["orderBy"] = $orderBy;
         }
 
-        if (static::filterQueryParameterIsValid()) {
+        if (static::filterQueryParameterIsValid($parsedQueryString)) {
             $ands = static::getFilterValue();
 
             $output["filter"] = $ands;
@@ -135,63 +129,185 @@ class OdataQueryParser
         return $output;
     }
 
-    private static function setQueryStrings(): void
+    /**
+     * Function to extract the query string from the input URL
+     *
+     * @param string $url The URL to parse
+     *
+     * @return string|null The query string from the input URL. Null if there is no query string.
+     * @throws InvalidArgumentException The URL is malformed and the query string could not be extracted
+     */
+    private static function extractQueryString(string $url): ?string
     {
-        static::$queryString = static::getQueryString();
-        static::$queryStrings = static::getQueryStrings();
+        $queryString = parse_url($url, PHP_URL_QUERY);
+
+        if ($queryString === false) {
+            throw new InvalidArgumentException("URL could not be parsed. Ensure the URL is not malformed.");
+        }
+
+        // The URL query string parser should return a string or null query string
+        if (!($queryString === null || is_string($queryString))) {
+            throw new InvalidArgumentException("URL query string should be a string.");
+        }
+
+        return $queryString;
     }
 
-    private static function getQueryString(): string
-    {
-        $queryString = \parse_url(static::$url, PHP_URL_QUERY);
-
-        return $queryString === null ? "" : $queryString;
-    }
-
-    private static function getQueryStrings(): array
+    /**
+     * Function to parse the query string into it's separate components
+     *
+     * @param string $queryString The query string to parse
+     *
+     * @return array<array-key, mixed> The components of the query string, split up into an array
+     */
+    private static function parseQueryString(string $queryString): array
     {
         $result = [];
-
-        if (!empty(static::$queryString)) {
-            \parse_str(static::$queryString, $result);
-        }
+        parse_str($queryString, $result);
 
         return $result;
     }
 
-    private static function hasKey(string $key): bool
+    /**
+     * Function to set the odata key constants depending on the $withDollar configuration
+     *
+     * @param bool $withDollar Whether to prepend a dollar key to the key name
+     *
+     * @return void Nothing, the method just sets the constants
+     */
+    private static function setKeyConstants(bool $withDollar): void
     {
-        return isset(static::$queryStrings[$key]);
+        self::$select = self::buildKeyConstant("select", $withDollar);
+        self::$count = self::buildKeyConstant("count", $withDollar);
+        self::$filter = self::buildKeyConstant("filter", $withDollar);
+        self::$orderBy = self::buildKeyConstant("orderby", $withDollar);
+        self::$skip = self::buildKeyConstant("skip", $withDollar);
+        self::$top = self::buildKeyConstant("top", $withDollar);
     }
 
-    private static function selectQueryParameterIsValid(): bool
+    /**
+     * Function to prepend a dollar to a key if required.
+     *
+     * @param string $key The name of the key to be built
+     * @param bool $withDollar Whether to prepend a dollar sign
+     *
+     * @return string The key with or without dollar sign prepended
+     */
+    private static function buildKeyConstant(string $key, bool $withDollar): string
     {
-        return static::hasKey(static::$selectKey) && !empty(static::$queryStrings[static::$selectKey]);
+        return $withDollar ? '$'.$key : $key;
     }
 
-    private static function countQueryParameterIsValid(): bool
+    /**
+     * Function to determine whether a odata key is present in the input query string
+     *
+     * @param string $key The key to check for
+     * @param array<array-key, mixed> $queryString The query string in which to find the key
+     *
+     * @return bool Whether the odata key is present in the input query string
+     */
+    private static function hasKey(string $key, array $queryString): bool
     {
-        return static::hasKey(static::$countKey) && (bool) trim(static::$queryStrings[static::$countKey]) === true;
+        return array_key_exists($key, $queryString);
     }
 
-    private static function topQueryParameterIsValid(): bool
+    /**
+     * Function to determine whether a select clause is present and valid in a query string
+     *
+     * @param array<array-key, mixed> $queryString The query string to find the select key in
+     *
+     * @return bool Whether the select key exists in the query string and is valid
+     */
+    private static function selectQueryParameterIsValid(array $queryString): bool
     {
-        return static::hasKey(static::$topKey);
+        return self::hasKey(self::$select, $queryString)
+            && !empty($queryString[self::$select]);
     }
 
-    private static function skipQueryParameterIsValid(): bool
+    /**
+     * Function to determine whether a count key is present and valid in a query string
+     *
+     * @param array<array-key, mixed> $queryString The query string to find the count key in
+     *
+     * @return bool Whether the count key exists in the query string and is valid
+     */
+    private static function countQueryParameterIsValid(array $queryString): bool
     {
-        return static::hasKey(static::$skipKey);
+        return self::validateWithFilterValidate($queryString, self::$count, FILTER_VALIDATE_BOOLEAN);
     }
 
-    private static function orderByQueryParameterIsValid(): bool
+    /**
+     * Function to determine whether a top key is present and valid in a query string
+     *
+     * @param array<array-key, mixed> $queryString The query string to find the top key in
+     *
+     * @return bool Whether the top key exists in the query string and is valid
+     */
+    private static function topQueryParameterIsValid(array $queryString): bool
     {
-        return static::hasKey(static::$orderByKey) && !empty(static::$queryStrings[static::$orderByKey]);
+        return self::validateWithFilterValidate($queryString, self::$top, FILTER_VALIDATE_INT);
     }
 
-    private static function filterQueryParameterIsValid(): bool
+    /**
+     * Function to determine whether a skip key is present and valid in a query string
+     *
+     * @param array<array-key, mixed> $queryString The query string to find the skip key in
+     *
+     * @return bool Whether the skip key exists in the query string and is valid
+     */
+    private static function skipQueryParameterIsValid(array $queryString): bool
     {
-        return static::hasKey(static::$filterKey) && !empty(static::$queryStrings[static::$filterKey]);
+        return self::validateWithFilterValidate($queryString, self::$skip, FILTER_VALIDATE_INT);
+    }
+
+    /**
+     * Function to determine whether a order by clause is present and valid in a query string
+     *
+     * @param array<array-key, mixed> $queryString The query string to find the order by key in
+     *
+     * @return bool Whether the order by key exists in the query string and is valid
+     */
+    private static function orderByQueryParameterIsValid(array $queryString): bool
+    {
+        return self::hasKey(self::$orderBy, $queryString)
+            && !empty($queryString[self::$orderBy]);
+    }
+
+    /**
+     * Function to determine whether a filter clause is present and valid in a query string
+     *
+     * @param array<array-key, mixed> $queryString The query string to find the filter key in
+     *
+     * @return bool Whether the filter key exists in the query string and is valid
+     */
+    private static function filterQueryParameterIsValid(array $queryString): bool
+    {
+        return self::hasKey(self::$filter, $queryString)
+            && !empty($queryString[self::$filter]);
+    }
+
+    /**
+     * Function to easily validate that an array key exists in a query string and adheres to a specified filter_var filter
+     *
+     * @param array<array-key, mixed> $queryString The query string to validate
+     * @param string $key The key to check in the query string
+     * @param int $filter The filter to validate the value against, if it exists in the query string
+     *
+     * @return bool Whether the key exists in the query string and adheres to the specified filter
+     */
+    private static function validateWithFilterValidate(array $queryString, string $key, int $filter): bool
+    {
+        if (!self::hasKey($key, $queryString)) {
+            return false;
+        }
+
+        // Trim can only be used on a string and count. At this point, the value has not been cast to a native datatype
+        if (!is_string($queryString[$key]) || empty(trim($queryString[$key]))) {
+            return false;
+        }
+
+        // Verify the value adheres to the specified filter
+        return filter_var($queryString[$key], $filter, FILTER_NULL_ON_FAILURE) !== null;
     }
 
     private static function getSelectColumns(): array
@@ -237,52 +353,6 @@ class OdataQueryParser
                 "right" => $right
             ];
         }, explode("and", static::$queryStrings[static::$filterKey]));
-    }
-
-    private static function setQueryParameterKeys(): void
-    {
-        static::$selectKey = static::getSelectKey();
-        static::$countKey = static::getCountKey();
-        static::$filterKey = static::getFilterKey();
-        static::$formatKey = static::getFormatKey();
-        static::$orderByKey = static::getOrderByKey();
-        static::$skipKey = static::getSkipKey();
-        static::$topKey = static::getTopKey();
-    }
-
-    private static function getSelectKey(): string
-    {
-        return static::$withDollar ? '$' . static::SELECT_KEY : static::SELECT_KEY;
-    }
-
-    private static function getCountKey(): string
-    {
-        return static::$withDollar ? '$' . static::COUNT_KEY : static::COUNT_KEY;
-    }
-
-    private static function getFilterKey(): string
-    {
-        return static::$withDollar ? '$' . static::FILTER_KEY : static::FILTER_KEY;
-    }
-
-    private static function getFormatKey(): string
-    {
-        return static::$withDollar ? '$' . static::FORMAT_KEY : static::FORMAT_KEY;
-    }
-
-    private static function getOrderByKey(): string
-    {
-        return static::$withDollar ? '$' . static::ORDER_BY_KEY : static::ORDER_BY_KEY;
-    }
-
-    private static function getSkipKey(): string
-    {
-        return static::$withDollar ? '$' . static::SKIP_KEY : static::SKIP_KEY;
-    }
-
-    private static function getTopKey(): string
-    {
-        return static::$withDollar ? '$' . static::TOP_KEY : static::TOP_KEY;
     }
 
     private static function getFilterOperatorName(string $operator): string

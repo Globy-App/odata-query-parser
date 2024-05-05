@@ -15,11 +15,11 @@ class OdataQuery
      */
     private array $select;
 
-    private bool $count;
+    private ?bool $count;
 
-    private int $top;
+    private ?int $top;
 
-    private int $skip;
+    private ?int $skip;
 
     /**
      * @var OrderByClause[] $orderBy
@@ -35,13 +35,13 @@ class OdataQuery
      * The parsed version of the input odata query string
      *
      * @param string[] $select A list of properties that should be returned
-     * @param bool $count Whether the amount of results should be returned
-     * @param int $top Return the top X amount of results
-     * @param int $skip Skip the first Y results
+     * @param bool|null $count Whether the amount of results should be returned
+     * @param int|null $top Return the top X amount of results
+     * @param int|null $skip Skip the first Y results
      * @param OrderByClause[] $orderBy The list of order by clauses requested
      * @param FilterClause[] $filter The list of filter clauses requested
      */
-    public function __construct(array $select, bool $count, int $top, int $skip, array $orderBy, array $filter)
+    public function __construct(array $select = [], ?bool $count = null, ?int $top = null, ?int $skip = null, array $orderBy = [], array $filter = [])
     {
         $this->select = $select;
         $this->count = $count;
@@ -60,25 +60,25 @@ class OdataQuery
     }
 
     /**
-     * @return bool Whether the amount of results should be included in the request
+     * @return bool|null Whether the amount of results should be included in the request
      */
-    public function isCount(): bool
+    public function isCount(): ?bool
     {
         return $this->count;
     }
 
     /**
-     * @return int The top amount of results to return
+     * @return int|null The top amount of results to return
      */
-    public function getTop(): int
+    public function getTop(): ?int
     {
         return $this->top;
     }
 
     /**
-     * @return int The amount of results to skip before starting to return results
+     * @return int|null The amount of results to skip before starting to return results
      */
-    public function getSkip(): int
+    public function getSkip(): ?int
     {
         return $this->skip;
     }
