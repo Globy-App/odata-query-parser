@@ -58,43 +58,12 @@ class OdataQueryParser
         self::setKeyConstants($withDollar);
 
         // Extract the different odata keys and store them in the output array
-        $select = [];
-        if (self::selectQueryParameterIsValid($parsedQueryString)) {
-            $select = self::getSelect($parsedQueryString);
-        }
-
-        $count = null;
-        if (self::countQueryParameterIsValid($parsedQueryString)) {
-            $count = boolval(trim($parsedQueryString[self::$count]));
-        }
-
-        $top = null;
-        if (self::topQueryParameterIsValid($parsedQueryString)) {
-            $top = intval(trim($parsedQueryString[self::$top]));
-
-            if ($top < 0) {
-                throw new InvalidArgumentException('Top should be greater or equal to zero');
-            }
-        }
-
-        $skip = null;
-        if (self::skipQueryParameterIsValid($parsedQueryString)) {
-            $skip = intval(trim($parsedQueryString[self::$skip]));
-
-            if ($skip < 0) {
-                throw new InvalidArgumentException('Skip should be greater or equal to zero');
-            }
-        }
-
-        $orderBy = [];
-        if (self::orderByQueryParameterIsValid($parsedQueryString)) {
-            $orderBy = self::getOrderBy($parsedQueryString);
-        }
-
-        $filter = [];
-        if (self::filterQueryParameterIsValid($parsedQueryString)) {
-            $filter = self::getFilterValue($parsedQueryString);
-        }
+        $select = self::getSelect($parsedQueryString);
+        $count = self::getCount($parsedQueryString);
+        $top = self::getTop($parsedQueryString);
+        $skip = self::getSkip($parsedQueryString);
+        $orderBy = self::getOrderBy($parsedQueryString);
+        $filter = self::getFilter($parsedQueryString);
 
         return new OdataQuery($select, $count, $top, $skip, $orderBy, $filter);
     }
@@ -190,81 +159,6 @@ class OdataQueryParser
     }
 
     /**
-     * Function to determine whether a select clause is present and valid in a query string
-     *
-     * @param array<string, string> $queryString The query string to find the select key in
-     *
-     * @return bool Whether the select key exists in the query string and is valid
-     */
-    private static function selectQueryParameterIsValid(array $queryString): bool
-    {
-        return self::hasKey(self::$select, $queryString)
-            && !empty(trim($queryString[self::$select]));
-    }
-
-    /**
-     * Function to determine whether a count key is present and valid in a query string
-     *
-     * @param array<string, string> $queryString The query string to find the count key in
-     *
-     * @return bool Whether the count key exists in the query string and is valid
-     */
-    private static function countQueryParameterIsValid(array $queryString): bool
-    {
-        return self::validateWithFilterValidate($queryString, self::$count, FILTER_VALIDATE_BOOLEAN);
-    }
-
-    /**
-     * Function to determine whether a top key is present and valid in a query string
-     *
-     * @param array<string, string> $queryString The query string to find the top key in
-     *
-     * @return bool Whether the top key exists in the query string and is valid
-     */
-    private static function topQueryParameterIsValid(array $queryString): bool
-    {
-        return self::validateWithFilterValidate($queryString, self::$top, FILTER_VALIDATE_INT);
-    }
-
-    /**
-     * Function to determine whether a skip key is present and valid in a query string
-     *
-     * @param array<string, string> $queryString The query string to find the skip key in
-     *
-     * @return bool Whether the skip key exists in the query string and is valid
-     */
-    private static function skipQueryParameterIsValid(array $queryString): bool
-    {
-        return self::validateWithFilterValidate($queryString, self::$skip, FILTER_VALIDATE_INT);
-    }
-
-    /**
-     * Function to determine whether an order by clause is present and valid in a query string
-     *
-     * @param array<string, string> $queryString The query string to find the order by key in
-     *
-     * @return bool Whether the order by key exists in the query string and is valid
-     */
-    private static function orderByQueryParameterIsValid(array $queryString): bool
-    {
-        return self::hasKey(self::$orderBy, $queryString)
-            && !empty(trim($queryString[self::$orderBy]));
-    }
-
-    /**
-     * Function to determine whether a filter clause is present and valid in a query string
-     *
-     * @param array<string, string> $queryString The query string to find the filter key in
-     *
-     * @return bool Whether the filter key exists in the query string and is valid
-     */
-    private static function filterQueryParameterIsValid(array $queryString): bool
-    {
-        return self::hasKey(self::$filter, $queryString)
-            && !empty(trim($queryString[self::$filter]));
-    }
-
-    /**
      * Function to easily validate that an array key exists in a query string and adheres to a specified filter_var filter
      *
      * @param array<string, string> $queryString The query string to validate
@@ -272,6 +166,7 @@ class OdataQueryParser
      * @param int $filter The filter to validate the value against, if it exists in the query string
      *
      * @return bool Whether the key exists in the query string and adheres to the specified filter
+     * @throws InvalidArgumentException If the input value doesn't pass the given filter
      */
     private static function validateWithFilterValidate(array $queryString, string $key, int $filter): bool
     {
@@ -301,12 +196,83 @@ class OdataQueryParser
      */
     private static function getSelect(array $queryString): array
     {
+        // If the original query string doesn't include a select part, return an empty array
+        if (!(self::hasKey(self::$select, $queryString)
+            && !empty(trim($queryString[self::$select])))) {
+            return [];
+        }
+
         // Split the select string into an array, as it's just a csv string
         $csvSplit = explode(",", $queryString[self::$select]);
 
         return array_map(function (string $column) {
             return trim($column);
         }, $csvSplit);
+    }
+
+    /**
+     * Function to determine whether a count key is present and return a parsed version of the value
+     *
+     * @param array<string, string> $queryString The query string to find the count key in
+     *
+     * @return bool|null The value of the count key, or null, if no count key is present in the query string
+     * @throws InvalidArgumentException If the input value doesn't pass the given filter
+     */
+    private static function getCount(array $queryString): ?bool
+    {
+        if (!self::validateWithFilterValidate($queryString, self::$count, FILTER_VALIDATE_BOOLEAN)) {
+            return null;
+        }
+
+        return boolval(trim($queryString[self::$count]));
+    }
+
+    /**
+     * Function to determine whether a top key is present and return a parsed version of the value
+     *
+     * @param array<string, string> $queryString The query string to find the top key in
+     *
+     * @return int|null The value of the top key, or null, if no top key is present in the query string
+     * @throws InvalidArgumentException If the input value is not a valid integer
+     */
+    private static function getTop(array $queryString): ?int
+    {
+        if (!self::validateWithFilterValidate($queryString, self::$top, FILTER_VALIDATE_INT)) {
+            return null;
+        }
+
+        // Parse skip and ensure it's larger than 0, as negative values don't make sense in this context
+        $top = intval(trim($queryString[self::$top]));
+
+        if ($top < 0) {
+            throw new InvalidArgumentException('Top should be greater or equal to zero');
+        }
+
+        return $top;
+    }
+
+    /**
+     * Function to determine whether a skip key is present and return a parsed version of the value
+     *
+     * @param array<string, string> $queryString The query string to find the skip key in
+     *
+     * @return int|null The value of the skip key, or null, if no skip key is present in the query string
+     * @throws InvalidArgumentException If the input value is not a valid integer
+     */
+    private static function getSkip(array $queryString): ?int
+    {
+        if (!self::validateWithFilterValidate($queryString, self::$skip, FILTER_VALIDATE_INT)) {
+            return null;
+        }
+
+        // Parse skip and ensure it's larger than 0, as negative values don't make sense in this context
+        $skip = intval(trim($queryString[self::$skip]));
+
+        if ($skip < 0) {
+            throw new InvalidArgumentException('Skip should be greater or equal to zero');
+        }
+
+        return $skip;
     }
 
     /**
@@ -319,6 +285,11 @@ class OdataQueryParser
      */
     private static function getOrderBy(array $queryString): array
     {
+        if (!(self::hasKey(self::$orderBy, $queryString)
+            && !empty(trim($queryString[self::$orderBy])))) {
+            return [];
+        }
+
         $csvSplit = explode(",", $queryString[self::$orderBy]);
 
         return array_map(function (string $clause): OrderByClause {
@@ -366,8 +337,13 @@ class OdataQueryParser
      * @return FilterClause[] The parsed list of filter clauses
      * @throws InvalidArgumentException If an invalid operator is found, or the clause split found a clause that was incorrectly formed
      */
-    private static function getFilterValue(array $queryString): array
+    private static function getFilter(array $queryString): array
     {
+        if (!(self::hasKey(self::$filter, $queryString)
+            && !empty(trim($queryString[self::$filter])))) {
+            return [];
+        }
+
         $filterParts = explode("and", $queryString[self::$filter]);
 
         return array_map(function (string $clause): FilterClause {
