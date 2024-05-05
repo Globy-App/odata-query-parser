@@ -44,7 +44,7 @@ class OdataQueryParser
     {
         // Verify the URL is valid
         if (filter_var($url, FILTER_VALIDATE_URL) === false) {
-            throw new InvalidArgumentException('Url should be a valid, full URL.');
+            throw new InvalidArgumentException('URL should be a valid, full URL.');
         }
 
         // Extract the query string from the URL and parse it into it's components
@@ -181,7 +181,7 @@ class OdataQueryParser
 
         // Verify the value adheres to the specified filter
         if (filter_var($queryString[$key], $filter, FILTER_NULL_ON_FAILURE) === null) {
-            throw new InvalidArgumentException("$key should adhere to the rules of filter $filter");
+            throw new InvalidArgumentException("Invalid datatype for $key");
         }
 
         return true;

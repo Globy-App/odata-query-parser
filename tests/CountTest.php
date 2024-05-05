@@ -9,7 +9,7 @@ final class CountTest extends TestCase
 {
     public function testShouldReturnCountTrueIfKeyFilledWithTrue(): void
     {
-        $expected = ["count" => true];
+        $expected = new OdataQueryParser\OdataQuery([], true);
         $actual = OdataQueryParser\OdataQueryParser::parse('https://example.com/api/user?$count=1');
 
         $this->assertEquals($expected, $actual);
@@ -17,7 +17,7 @@ final class CountTest extends TestCase
 
     public function testShouldReturnCountTrueIfKeyFilledWithTrueAndSpaces(): void
     {
-        $expected = ["count" => true];
+        $expected = new OdataQueryParser\OdataQuery([], true);
         $actual = OdataQueryParser\OdataQueryParser::parse('https://example.om/api/user?$count=%201%20');
 
         $this->assertEquals($expected, $actual);
@@ -25,7 +25,7 @@ final class CountTest extends TestCase
 
     public function testShouldNotReturnCountIfKeyFilledWithFalse(): void
     {
-        $expected = [];
+        $expected = new OdataQueryParser\OdataQuery([], false);
         $actual = OdataQueryParser\OdataQueryParser::parse('https://example.com/api/user?$count=0');
 
         $this->assertEquals($expected, $actual);
@@ -33,7 +33,7 @@ final class CountTest extends TestCase
 
     public function testShouldNotReturnCountIfKeyFilledWithFalseAndSpaces(): void
     {
-        $expected = [];
+        $expected = new OdataQueryParser\OdataQuery([], false);
         $actual = OdataQueryParser\OdataQueryParser::parse('https://example.com/api/user?$count=%200%20');
 
         $this->assertEquals($expected, $actual);
@@ -41,7 +41,7 @@ final class CountTest extends TestCase
 
     public function testShouldReturnCountTrueIfKeyFillWithTrueInNonDollarMode(): void
     {
-        $expected = ["count" => true];
+        $expected = new OdataQueryParser\OdataQuery([], true);
         $actual = OdataQueryParser\OdataQueryParser::parse("https://example.com/api/user?count=1", false);
 
         $this->assertEquals($expected, $actual);
@@ -49,7 +49,7 @@ final class CountTest extends TestCase
 
     public function testShouldReturnCountTrueIfKeyFilledWithTrueAndSpacesInNonDollarMode(): void
     {
-        $expected = ["count" => true];
+        $expected = new OdataQueryParser\OdataQuery([], true);
         $actual = OdataQueryParser\OdataQueryParser::parse('https://example.com/api/user?count=%201%20', false);
 
         $this->assertEquals($expected, $actual);
@@ -57,7 +57,7 @@ final class CountTest extends TestCase
 
     public function testShouldNotReturnCountIfKeyFilledWithFalseInNonDollarMode(): void
     {
-        $expected = [];
+        $expected = new OdataQueryParser\OdataQuery([], false);
         $actual = OdataQueryParser\OdataQueryParser::parse("https://example.com/api/user?count=0", false);
 
         $this->assertEquals($expected, $actual);
@@ -65,7 +65,7 @@ final class CountTest extends TestCase
 
     public function testShouldNotReturnCountIfKeyFilledWithFalseAndSpacesInNonDollarMode(): void
     {
-        $expected = [];
+        $expected = new OdataQueryParser\OdataQuery([], false);
         $actual = OdataQueryParser\OdataQueryParser::parse('https://example.com/api/user?count=%200%20', false);
 
         $this->assertEquals($expected, $actual);

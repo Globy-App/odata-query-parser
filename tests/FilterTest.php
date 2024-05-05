@@ -9,7 +9,7 @@ final class FilterTest extends TestCase
 {
     public function testShouldReturnEmptyArrayIfEmptyFilter(): void
     {
-        $expected = [];
+        $expected = new OdataQueryParser\OdataQuery();
         $actual = OdataQueryParser\OdataQueryParser::parse("https://example.com/api/user?\$filter=");
 
         $this->assertEquals($expected, $actual);
@@ -17,11 +17,9 @@ final class FilterTest extends TestCase
 
     public function testShouldReturnEqualClause(): void
     {
-        $expected = [
-            "filter" => [
-                ["left" => "name", "operator" => "equal", "right" => "foo"]
-            ]
-        ];
+        $expected = new OdataQueryParser\OdataQuery([], null, null, null, [], [
+            new OdataQueryParser\Datatype\FilterClause('name', OdataQueryParser\Enum\FilterOperator::EQUALS, 'foo'),
+        ]);
         $actual = OdataQueryParser\OdataQueryParser::parse("https://example.com/api/user?\$filter=name%20eq%20%27foo%27");
 
         $this->assertEquals($expected, $actual);
@@ -39,11 +37,9 @@ final class FilterTest extends TestCase
 
     public function testShouldReturnEqualClauseWithSpacedStrings(): void
     {
-        $expected = [
-            "filter" => [
-                ["left" => "name", "operator" => "equal", "right" => " foo "]
-            ]
-        ];
+        $expected = new OdataQueryParser\OdataQuery([], null, null, null, [], [
+            new OdataQueryParser\Datatype\FilterClause('name', OdataQueryParser\Enum\FilterOperator::EQUALS, ' foo '),
+        ]);
         $actual = OdataQueryParser\OdataQueryParser::parse("https://example.com/api/user?\$filter=name%20eq%20%27%20foo%20%27");
 
         $this->assertEquals($expected, $actual);
@@ -51,11 +47,9 @@ final class FilterTest extends TestCase
 
     public function testShouldReturnNotEqualClause(): void
     {
-        $expected = [
-            "filter" => [
-                ["left" => "name", "operator" => "notEqual", "right" => "foo"]
-            ]
-        ];
+        $expected = new OdataQueryParser\OdataQuery([], null, null, null, [], [
+            new OdataQueryParser\Datatype\FilterClause('name', OdataQueryParser\Enum\FilterOperator::NOT_EQUALS, 'foo'),
+        ]);
         $actual = OdataQueryParser\OdataQueryParser::parse("https://example.com/api/user?\$filter=name%20ne%20%27foo%27");
 
         $this->assertEquals($expected, $actual);
@@ -63,11 +57,9 @@ final class FilterTest extends TestCase
 
     public function testShouldReturnGreaterThanClause(): void
     {
-        $expected = [
-            "filter" => [
-                ["left" => "age", "operator" => "greaterThan", "right" => 20]
-            ]
-        ];
+        $expected = new OdataQueryParser\OdataQuery([], null, null, null, [], [
+            new OdataQueryParser\Datatype\FilterClause('age', OdataQueryParser\Enum\FilterOperator::GREATER_THAN, 20),
+        ]);
         $actual = OdataQueryParser\OdataQueryParser::parse("https://example.com/api/user?\$filter=age%20gt%2020");
 
         $this->assertEquals($expected, $actual);
@@ -75,11 +67,9 @@ final class FilterTest extends TestCase
 
     public function testShouldReturnGreaterOrEqualToClause(): void
     {
-        $expected = [
-            "filter" => [
-                ["left" => "age", "operator" => "greaterOrEqual", "right" => 21]
-            ]
-        ];
+        $expected = new OdataQueryParser\OdataQuery([], null, null, null, [], [
+            new OdataQueryParser\Datatype\FilterClause('age', OdataQueryParser\Enum\FilterOperator::GREATER_THAN_EQUALS, 21),
+        ]);
         $actual = OdataQueryParser\OdataQueryParser::parse("https://example.com/api/user?\$filter=age%20ge%2021");
 
         $this->assertEquals($expected, $actual);
@@ -87,11 +77,9 @@ final class FilterTest extends TestCase
 
     public function testShouldReturnLowerThanClause(): void
     {
-        $expected = [
-            "filter" => [
-                ["left" => "age", "operator" => "lowerThan", "right" => 42]
-            ]
-        ];
+        $expected = new OdataQueryParser\OdataQuery([], null, null, null, [], [
+            new OdataQueryParser\Datatype\FilterClause('age', OdataQueryParser\Enum\FilterOperator::LESS_THAN, 42),
+        ]);
         $actual = OdataQueryParser\OdataQueryParser::parse("https://example.com/api/user?\$filter=age%20lt%2042");
 
         $this->assertEquals($expected, $actual);
@@ -99,11 +87,9 @@ final class FilterTest extends TestCase
 
     public function testShouldReturnLowerOrEqualToClause(): void
     {
-        $expected = [
-            "filter" => [
-                ["left" => "age", "operator" => "lowerOrEqual", "right" => 42]
-            ]
-        ];
+        $expected = new OdataQueryParser\OdataQuery([], null, null, null, [], [
+            new OdataQueryParser\Datatype\FilterClause('age', OdataQueryParser\Enum\FilterOperator::LESS_THAN_EQUALS, 42),
+        ]);
         $actual = OdataQueryParser\OdataQueryParser::parse("https://example.com/api/user?\$filter=age%20le%2042");
 
         $this->assertEquals($expected, $actual);
@@ -111,11 +97,10 @@ final class FilterTest extends TestCase
 
     public function testShouldReturnInClause(): void
     {
-        $expected = [
-            "filter" => [
-                ["left" => "city", "operator" => "in", "right" => ["Paris", "Malaga", "London"]]
-            ]
-        ];
+        $expected = new OdataQueryParser\OdataQuery([], null, null, null, [], [
+            new OdataQueryParser\Datatype\FilterClause('city', OdataQueryParser\Enum\FilterOperator::IN,
+                ["Paris", "Malaga", "London"]),
+        ]);
         $actual = OdataQueryParser\OdataQueryParser::parse("https://example.com/api/user?\$filter=city%20in%20(%27Paris%27,%20%27Malaga%27,%20%27London%27)");
 
         $this->assertEquals($expected, $actual);
@@ -123,13 +108,12 @@ final class FilterTest extends TestCase
 
     public function testShouldReturnMultipleClauseSeparatedByTheAndOperator(): void
     {
-        $expected = [
-            "filter" => [
-                ["left" => "city", "operator" => "in", "right" => [" Paris", " Malaga ", "London "]],
-                ["left" => "name", "operator" => "equal", "right" => "foo"],
-                ["left" => "age", "operator" => "greaterThan", "right" => 20]
-            ]
-        ];
+        $expected = new OdataQueryParser\OdataQuery([], null, null, null, [], [
+            new OdataQueryParser\Datatype\FilterClause('city', OdataQueryParser\Enum\FilterOperator::IN,
+                [" Paris", " Malaga ", "London "]),
+            new OdataQueryParser\Datatype\FilterClause('name', OdataQueryParser\Enum\FilterOperator::EQUALS, 'foo'),
+            new OdataQueryParser\Datatype\FilterClause('age', OdataQueryParser\Enum\FilterOperator::GREATER_THAN, 20),
+        ]);
         $actual = OdataQueryParser\OdataQueryParser::parse("https://example.com/api/user?\$filter=city%20in%20(%27%20Paris%27,%20%27%20Malaga%20%27,%20%27London%20%27)%20and%20name%20eq%20%27foo%27%20and%20age%20gt%2020");
 
         $this->assertEquals($expected, $actual);
@@ -137,11 +121,10 @@ final class FilterTest extends TestCase
 
     public function testShouldReturnIntegersIfInIntegers(): void
     {
-        $expected = [
-            "filter" => [
-                ["left" => "age", "operator" => "in", "right" => [21, 31, 41]]
-            ]
-        ];
+        $expected = new OdataQueryParser\OdataQuery([], null, null, null, [], [
+            new OdataQueryParser\Datatype\FilterClause('age', OdataQueryParser\Enum\FilterOperator::IN,
+                [21, 31, 41]),
+        ]);
         $actual = OdataQueryParser\OdataQueryParser::parse("http://example.com/api/user?\$filter=age%20in%20(21,%2031,%2041)");
 
         $this->assertEquals($expected, $actual);
@@ -149,11 +132,10 @@ final class FilterTest extends TestCase
 
     public function testShouldReturnIntegersIfInFloats(): void
     {
-        $expected = [
-            "filter" => [
-                ["left" => "age", "operator" => "in", "right" => [21.42, 31.42, 41.42]]
-            ]
-        ];
+        $expected = new OdataQueryParser\OdataQuery([], null, null, null, [], [
+            new OdataQueryParser\Datatype\FilterClause('age', OdataQueryParser\Enum\FilterOperator::IN,
+                [21.42, 31.42, 41.42]),
+        ]);
         $actual = OdataQueryParser\OdataQueryParser::parse("https://example.com/api/user?\$filter=age%20in%20(21.42,%2031.42,%2041.42)");
 
         $this->assertEquals($expected, $actual);
