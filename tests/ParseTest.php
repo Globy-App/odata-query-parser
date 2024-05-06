@@ -36,11 +36,11 @@ final class ParseTest extends TestCase {
         $actual = OdataQueryParser\OdataQueryParser::parse('https://example.com/api/user?$select=firstName,lastName&$orderby=id&$top=10&$skip=10');
 
         $this->assertEquals($expected, $actual);
-        $this->assertEquals($expected->getSelect(), $actual->getSelect());
-        $this->assertEquals($expected->getCount(), $actual->getCount());
-        $this->assertEquals($expected->getTop(), $actual->getTop());
-        $this->assertEquals($expected->getSkip(), $actual->getSkip());
-        $this->assertEquals($expected->getOrderBy(), $actual->getOrderBy());
-        $this->assertEquals($expected->getFilter(), $actual->getFilter());
+        $this->assertEquals($expected->getSelect(), $actual?->getSelect());
+        $this->assertEquals($expected->getCount(), $actual?->getCount());
+        $this->assertEquals($expected->getTop(), $actual?->getTop());
+        $this->assertEquals($expected->getSkip(), $actual?->getSkip());
+        $this->assertEquals($expected->getOrderBy(), $actual?->getOrderBy());
+        $this->assertEquals($expected->getFilter(), $actual?->getFilter());
     }
 }

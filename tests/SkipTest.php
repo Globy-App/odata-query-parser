@@ -30,7 +30,7 @@ final class SkipTest extends TestCase
         $actual = OdataQueryParser\OdataQueryParser::parse('https://example.com/api/user?$skip=42');
 
         $this->assertEquals($expected, $actual);
-        $this->assertEquals($expected->getSkip(), $actual->getSkip());
+        $this->assertEquals($expected->getSkip(), $actual?->getSkip());
     }
 
     public function testShouldContainTheSkipValueIfProvidedInTheQueryParameterAndFilledWithSpaces(): void
@@ -39,7 +39,7 @@ final class SkipTest extends TestCase
         $actual = OdataQueryParser\OdataQueryParser::parse('https://example.com/api/user?$skip=%2042%20');
 
         $this->assertEquals($expected, $actual);
-        $this->assertEquals($expected->getSkip(), $actual->getSkip());
+        $this->assertEquals($expected->getSkip(), $actual?->getSkip());
     }
 
     public function testShouldContainAnEmptyArrayIfSkipParameterIsEmpty(): void
@@ -48,7 +48,7 @@ final class SkipTest extends TestCase
         $actual = OdataQueryParser\OdataQueryParser::parse('https://example.com/api/user?$skip=');
 
         $this->assertEquals($expected, $actual);
-        $this->assertEquals($expected->getSkip(), $actual->getSkip());
+        $this->assertEquals($expected->getSkip(), $actual?->getSkip());
     }
 
     public function testShouldNotThrowExceptionIfSkipIsEqualToZero(): void
@@ -57,7 +57,7 @@ final class SkipTest extends TestCase
         $actual = OdataQueryParser\OdataQueryParser::parse('https://example.com/api/user?$skip=0');
 
         $this->assertEquals($expected, $actual);
-        $this->assertEquals($expected->getSkip(), $actual->getSkip());
+        $this->assertEquals($expected->getSkip(), $actual?->getSkip());
     }
 
     public function testShouldReturnAnIntegerForTheSkipValue(): void
@@ -87,7 +87,7 @@ final class SkipTest extends TestCase
         $actual = OdataQueryParser\OdataQueryParser::parse('https://example.com/api/user?skip=42', false);
 
         $this->assertEquals($expected, $actual);
-        $this->assertEquals($expected->getSkip(), $actual->getSkip());
+        $this->assertEquals($expected->getSkip(), $actual?->getSkip());
     }
 
     public function testShouldContainTheSkipValueIfProvidedInTheQueryParameterAndFilledWithSpacesInNonDollarMode(): void
@@ -96,7 +96,7 @@ final class SkipTest extends TestCase
         $actual = OdataQueryParser\OdataQueryParser::parse('https://example.com/api/user?skip=%2042%20', false);
 
         $this->assertEquals($expected, $actual);
-        $this->assertEquals($expected->getSkip(), $actual->getSkip());
+        $this->assertEquals($expected->getSkip(), $actual?->getSkip());
     }
 
     public function testShouldContainAnEmptyArrayIfSkipParameterIsEmptyInNonDollarMode(): void
@@ -105,6 +105,6 @@ final class SkipTest extends TestCase
         $actual = OdataQueryParser\OdataQueryParser::parse('https://example.com/api/user?skip=', false);
 
         $this->assertEquals($expected, $actual);
-        $this->assertEquals($expected->getSkip(), $actual->getSkip());
+        $this->assertEquals($expected->getSkip(), $actual?->getSkip());
     }
 }

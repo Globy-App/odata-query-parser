@@ -22,7 +22,7 @@ final class TopTest extends TestCase
         $actual = OdataQueryParser\OdataQueryParser::parse('https://example.com/api/user/?$top=0');
 
         $this->assertEquals($expected, $actual);
-        $this->assertEquals($expected->getTop(), $actual->getTop());
+        $this->assertEquals($expected->getTop(), $actual?->getTop());
     }
 
     public function testShouldThrowAnExceptionIfTopQueryParameterIsLowerThanZeroAndFilledWithSpaces(): void
@@ -47,7 +47,7 @@ final class TopTest extends TestCase
         $actual = OdataQueryParser\OdataQueryParser::parse('https://example.com/?$top=42');
 
         $this->assertEquals($expected, $actual);
-        $this->assertEquals($expected->getTop(), $actual->getTop());
+        $this->assertEquals($expected->getTop(), $actual?->getTop());
     }
 
     public function testShouldReturnAnIntegerTopValue(): void
@@ -61,6 +61,6 @@ final class TopTest extends TestCase
         $actual = OdataQueryParser\OdataQueryParser::parse('https://example.com/api/user?$top=%2042%20');
 
         $this->assertEquals($expected, $actual);
-        $this->assertEquals($expected->getTop(), $actual->getTop());
+        $this->assertEquals($expected->getTop(), $actual?->getTop());
     }
 }
