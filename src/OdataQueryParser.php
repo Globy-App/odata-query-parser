@@ -2,9 +2,14 @@
 
 declare(strict_types=1);
 
-namespace GlobyApp;
+namespace GlobyApp\OdataQueryParser;
 
+use GlobyApp\OdataQueryParser\Datatype\FilterClause;
+use GlobyApp\OdataQueryParser\Datatype\OrderByClause;
+use GlobyApp\OdataQueryParser\Enum\FilterOperator;
+use GlobyApp\OdataQueryParser\Enum\OrderDirection;
 use InvalidArgumentException;
+use LogicException;
 
 /**
  * The actual parser class that can parse an odata url
@@ -13,311 +18,438 @@ use InvalidArgumentException;
  */
 class OdataQueryParser
 {
-    private const COUNT_KEY = "count";
-    private const FILTER_KEY = "filter";
-    private const FORMAT_KEY = "format";
-    private const ORDER_BY_KEY = "orderby";
-    private const SELECT_KEY = "select";
-    private const SKIP_KEY = "skip";
-    private const TOP_KEY = "top";
-
-    private static string $url = "";
-    private static string $queryString = "";
-    private static array $queryStrings = [];
-    private static bool $withDollar = false;
-    private static string $selectKey = "";
-    private static string $countKey = "";
-    private static string $filterKey = "";
-    private static string $formatKey = "";
-    private static string $orderByKey = "";
-    private static string $skipKey = "";
-    private static string $topKey = "";
+    private static string $select;
+    private static string $count;
+    private static string $filter;
+    private static string $orderBy;
+    private static string $skip;
+    private static string $top;
 
     /**
-     * Parses a given URL, returns an associative array with the odata parts of the URL.
+     * Parses a given URL, returns a result object with the odata parts of the URL.
      *
-     * @param string $url The URL to parse the query strings from. It should be a "complete" or "full" URL, which means that http://example.com will pass while example.com will not pass.
-     * @param bool $withDollar When set to false, parses the odata keys without requiring the $ in front of odata keys.
+     * Usage:
+     * ```
+     *  OdataQueryParser::parse("http://example.com?$select=[field]&$top=10&$skip=5&$orderBy", true)
+     *  OdataQueryParser::parse("http://example.com?select=[field]&top=10&skip=5&orderBy", false)
+     * ```
      *
-     * @return array The associative array containing the different odata keys.
+     * @param string $url The URL to parse the query strings from. It should be a "complete" or "full" URL
+     * @param bool $withDollar When set to false, parses the odata keys without requiring the $ in front of odata keys
+     *
+     * @return OdataQuery|null OdataQuery object, parsed version of the input url, or null, if there is no query string
+     * @throws InvalidArgumentException The URL, or parts of it are malformed and could not be processed
      */
-    public static function parse(string $url, bool $withDollar = true): array
+    public static function parse(string $url, bool $withDollar = true): ?OdataQuery
     {
-        $output = [];
-
-        // Set the options and url
-        static::$url = $url;
-        static::$withDollar = $withDollar;
-
         // Verify the URL is valid
-        if (\filter_var(static::$url, FILTER_VALIDATE_URL) === false) {
-            throw new InvalidArgumentException('url should be a valid url');
+        if (filter_var($url, FILTER_VALIDATE_URL) === false) {
+            throw new InvalidArgumentException('URL should be a valid, full URL.');
         }
 
-        static::setQueryStrings();
+        // Extract the query string from the URL and parse it into it's components
+        $queryString = self::extractQueryString($url);
+        if ($queryString === null) {
+            // There is no query string, so there cannot be a result
+            return null;
+        }
 
-        static::setQueryParameterKeys();
+        $parsedQueryString = self::parseQueryString($queryString);
+        self::setKeyConstants($withDollar);
 
         // Extract the different odata keys and store them in the output array
-        if (static::selectQueryParameterIsValid()) {
-            $output["select"] = static::getSelectColumns();
-        }
+        $select = self::getSelect($parsedQueryString);
+        $count = self::getCount($parsedQueryString);
+        $top = self::getTop($parsedQueryString);
+        $skip = self::getSkip($parsedQueryString);
+        $orderBy = self::getOrderBy($parsedQueryString);
+        $filter = self::getFilter($parsedQueryString);
 
-        if (static::countQueryParameterIsValid()) {
-            $output["count"] = true;
-        }
-
-        if (static::topQueryParameterIsValid()) {
-            $top = static::getTopValue();
-
-            if (!\is_numeric($top)) {
-                throw new InvalidArgumentException('top should be an integer');
-            }
-
-            $top = $top;
-
-            if ($top < 0) {
-                throw new InvalidArgumentException('top should be greater or equal to zero');
-            }
-
-            $output["top"] = (int) $top;
-        }
-
-        if (static::skipQueryParameterIsValid()) {
-            $skip = static::getSkipValue();
-
-            if (!\is_numeric($skip)) {
-                throw new InvalidArgumentException('skip should be an integer');
-            }
-
-            $skip = $skip;
-
-            if ($skip < 0) {
-                throw new InvalidArgumentException('skip should be greater or equal to zero');
-            }
-
-            $output["skip"] = (int) $skip;
-        }
-
-        if (static::orderByQueryParameterIsValid()) {
-            $items = static::getOrderByColumnsAndDirections();
-
-            $orderBy = \array_map(function ($item) {
-                $explodedItem = \explode(" ", $item);
-
-                $explodedItem = array_values(array_filter($explodedItem, function ($item) {
-                    return $item !== "";
-                }));
-
-                $property = $explodedItem[0];
-                $direction = isset($explodedItem[1]) ? $explodedItem[1] : "asc";
-
-                if ($direction !== "asc" && $direction !== "desc") {
-                    throw new InvalidArgumentException('direction should be either asc or desc');
-                }
-
-                return [
-                    "property" => $property,
-                    "direction" => $direction
-                ];
-            }, $items);
-
-            $output["orderBy"] = $orderBy;
-        }
-
-        if (static::filterQueryParameterIsValid()) {
-            $ands = static::getFilterValue();
-
-            $output["filter"] = $ands;
-        }
-
-
-        return $output;
+        return new OdataQuery($select, $count, $top, $skip, $orderBy, $filter);
     }
 
-    private static function setQueryStrings(): void
+    /**
+     * Function to extract the query string from the input URL
+     *
+     * @param string $url The URL to parse
+     *
+     * @return string|null The query string from the input URL. Null if there is no query string.
+     * @throws InvalidArgumentException The URL is malformed and the query string could not be extracted
+     */
+    private static function extractQueryString(string $url): ?string
     {
-        static::$queryString = static::getQueryString();
-        static::$queryStrings = static::getQueryStrings();
+        $queryString = parse_url($url, PHP_URL_QUERY);
+
+        if ($queryString === false) {
+            throw new InvalidArgumentException("URL could not be parsed. Ensure the URL is not malformed.");
+        }
+
+        // The URL query string parser should return a string or null query string
+        if (!($queryString === null || is_string($queryString))) {
+            throw new InvalidArgumentException("URL query string should be a string.");
+        }
+
+        return $queryString;
     }
 
-    private static function getQueryString(): string
-    {
-        $queryString = \parse_url(static::$url, PHP_URL_QUERY);
-
-        return $queryString === null ? "" : $queryString;
-    }
-
-    private static function getQueryStrings(): array
+    /**
+     * Function to parse the query string into it's separate components
+     *
+     * @param string $queryString The query string to parse
+     *
+     * @return array<string, string> The components of the query string, split up into an array
+     */
+    private static function parseQueryString(string $queryString): array
     {
         $result = [];
+        parse_str($queryString, $result);
 
-        if (!empty(static::$queryString)) {
-            \parse_str(static::$queryString, $result);
+        // Verify that the parsed result only has string key and values
+        foreach ($result as $key => $value) {
+            if (!is_string($key) || !is_string($value)) {
+                throw new InvalidArgumentException("Parsed query string has non-string values.");
+            }
         }
 
+        /* @phpstan-ignore-next-line The structure of the return value is verified in the foreach block above */
         return $result;
     }
 
-    private static function hasKey(string $key): bool
+    /**
+     * Function to set the odata key constants depending on the $withDollar configuration
+     *
+     * @param bool $withDollar Whether to prepend a dollar key to the key name
+     *
+     * @return void Nothing, the method just sets the constants
+     */
+    private static function setKeyConstants(bool $withDollar): void
     {
-        return isset(static::$queryStrings[$key]);
+        self::$select = self::buildKeyConstant("select", $withDollar);
+        self::$count = self::buildKeyConstant("count", $withDollar);
+        self::$filter = self::buildKeyConstant("filter", $withDollar);
+        self::$orderBy = self::buildKeyConstant("orderby", $withDollar);
+        self::$skip = self::buildKeyConstant("skip", $withDollar);
+        self::$top = self::buildKeyConstant("top", $withDollar);
     }
 
-    private static function selectQueryParameterIsValid(): bool
+    /**
+     * Function to prepend a dollar to a key if required.
+     *
+     * @param string $key The name of the key to be built
+     * @param bool $withDollar Whether to prepend a dollar sign
+     *
+     * @return string The key with or without dollar sign prepended
+     */
+    private static function buildKeyConstant(string $key, bool $withDollar): string
     {
-        return static::hasKey(static::$selectKey) && !empty(static::$queryStrings[static::$selectKey]);
+        return $withDollar ? '$'.$key : $key;
     }
 
-    private static function countQueryParameterIsValid(): bool
+    /**
+     * Function to determine whether an odata key is present in the input query string
+     *
+     * @param string $key The key to check for
+     * @param array<string, string> $queryString The query string in which to find the key
+     *
+     * @return bool Whether the odata key is present in the input query string
+     */
+    private static function hasKey(string $key, array $queryString): bool
     {
-        return static::hasKey(static::$countKey) && (bool) trim(static::$queryStrings[static::$countKey]) === true;
+        return array_key_exists($key, $queryString);
     }
 
-    private static function topQueryParameterIsValid(): bool
+    /**
+     * Function to easily validate that an array key exists in a query string and adheres to a specified filter_var filter
+     *
+     * @param array<string, string> $queryString The query string to validate
+     * @param string $key The key to check in the query string
+     * @param int $filter The filter to validate the value against, if it exists in the query string
+     *
+     * @return bool Whether the key exists in the query string and adheres to the specified filter
+     * @throws InvalidArgumentException If the input value doesn't pass the given filter
+     */
+    private static function validateWithFilterValidate(array $queryString, string $key, int $filter): bool
     {
-        return static::hasKey(static::$topKey);
+        if (!self::hasKey($key, $queryString)) {
+            return false;
+        }
+
+        // Trim can only be used on a string and count. At this point, the value has not been cast to a native datatype
+        if (empty(trim($queryString[$key])) && trim($queryString[$key]) !== '0') {
+            return false;
+        }
+
+        // Verify the value adheres to the specified filter
+        if (filter_var($queryString[$key], $filter, FILTER_NULL_ON_FAILURE) === null) {
+            throw new InvalidArgumentException("Invalid datatype for $key");
+        }
+
+        return true;
     }
 
-    private static function skipQueryParameterIsValid(): bool
+    /**
+     * Function to parse and process the list of select properties
+     *
+     * @param array<string, string> $queryString The parsed query string
+     *
+     * @return string[] The list of properties to be selected
+     */
+    private static function getSelect(array $queryString): array
     {
-        return static::hasKey(static::$skipKey);
-    }
+        // If the original query string doesn't include a select part, return an empty array
+        if (!(self::hasKey(self::$select, $queryString)
+            && !empty(trim($queryString[self::$select])))) {
+            return [];
+        }
 
-    private static function orderByQueryParameterIsValid(): bool
-    {
-        return static::hasKey(static::$orderByKey) && !empty(static::$queryStrings[static::$orderByKey]);
-    }
+        // Split the select string into an array, as it's just a csv string
+        $csvSplit = explode(",", $queryString[self::$select]);
 
-    private static function filterQueryParameterIsValid(): bool
-    {
-        return static::hasKey(static::$filterKey) && !empty(static::$queryStrings[static::$filterKey]);
-    }
-
-    private static function getSelectColumns(): array
-    {
-        return array_map(function ($column) {
+        return array_map(function (string $column) {
             return trim($column);
-        }, explode(",", static::$queryStrings[static::$selectKey]));
+        }, $csvSplit);
     }
 
-    private static function getTopValue(): string
+    /**
+     * Function to determine whether a count key is present and return a parsed version of the value
+     *
+     * @param array<string, string> $queryString The query string to find the count key in
+     *
+     * @return bool|null The value of the count key, or null, if no count key is present in the query string
+     * @throws InvalidArgumentException If the input value doesn't pass the given filter
+     */
+    private static function getCount(array $queryString): ?bool
     {
-        return trim(static::$queryStrings[static::$topKey]);
+        if (!self::validateWithFilterValidate($queryString, self::$count, FILTER_VALIDATE_BOOLEAN)) {
+            // 0 and 1 are also valid values for a boolean
+            if (!(array_key_exists(self::$count, $queryString)
+                && (trim($queryString[self::$count]) === '0' || trim($queryString[self::$count]) === '1'))) {
+                return null;
+            }
+        }
+
+        return boolval(trim($queryString[self::$count]));
     }
 
-    private static function getSkipValue(): string
+    /**
+     * Function to determine whether a top key is present and return a parsed version of the value
+     *
+     * @param array<string, string> $queryString The query string to find the top key in
+     *
+     * @return int|null The value of the top key, or null, if no top key is present in the query string
+     * @throws InvalidArgumentException If the input value is not a valid integer
+     */
+    private static function getTop(array $queryString): ?int
     {
-        return trim(static::$queryStrings[static::$skipKey]);
+        if (!self::validateWithFilterValidate($queryString, self::$top, FILTER_VALIDATE_INT)) {
+            return null;
+        }
+
+        // Parse skip and ensure it's larger than 0, as negative values don't make sense in this context
+        $top = intval(trim($queryString[self::$top]));
+
+        if ($top < 0) {
+            throw new InvalidArgumentException('Top should be greater or equal to zero');
+        }
+
+        return $top;
     }
 
-    private static function getOrderByColumnsAndDirections(): array
+    /**
+     * Function to determine whether a skip key is present and return a parsed version of the value
+     *
+     * @param array<string, string> $queryString The query string to find the skip key in
+     *
+     * @return int|null The value of the skip key, or null, if no skip key is present in the query string
+     * @throws InvalidArgumentException If the input value is not a valid integer
+     */
+    private static function getSkip(array $queryString): ?int
     {
-        return explode(",", static::$queryStrings[static::$orderByKey]);
+        if (!self::validateWithFilterValidate($queryString, self::$skip, FILTER_VALIDATE_INT)) {
+            return null;
+        }
+
+        // Parse skip and ensure it's larger than 0, as negative values don't make sense in this context
+        $skip = intval(trim($queryString[self::$skip]));
+
+        if ($skip < 0) {
+            throw new InvalidArgumentException('Skip should be greater or equal to zero');
+        }
+
+        return $skip;
     }
 
-    private static function getFilterValue(): array
+    /**
+     * Function to split the orderBy part of a query string and return a list of order by clauses
+     *
+     * @param array<string, string> $queryString The query string to get the order by clauses from
+     *
+     * @return OrderByClause[] The parsed order by clauses
+     * @throws InvalidArgumentException If the direction is not asc or desc, or the clause split found a clause that was incorrectly formed
+     */
+    private static function getOrderBy(array $queryString): array
     {
-        return array_map(function ($and) {
-            $items = [];
+        if (!(self::hasKey(self::$orderBy, $queryString)
+            && !empty(trim($queryString[self::$orderBy])))) {
+            return [];
+        }
 
-            preg_match("/(\w+)\s*(eq|ne|gt|ge|lt|le|in)\s*([\w',()\s.]+)/", $and, $items);
+        $csvSplit = explode(",", $queryString[self::$orderBy]);
 
-            $left = $items[1];
-            $operator = static::getFilterOperatorName($items[2]);
-            $right = static::getFilterRightValue($operator, $items[3]);
+        return array_map(function (string $clause): OrderByClause {
+            $splitClause = explode(' ', $clause);
 
-            /**
-             * @todo check whether [1], [2] and [3] are set -> will fix in a different PR
-             */
+            // Remove empty strings from the result
+            $splitClause = array_values(array_filter($splitClause, function ($item) {
+                return !empty($item);
+            }));
 
-            return [
-                "left" => $left,
-                "operator" => $operator,
-                "right" => $right
-            ];
-        }, explode("and", static::$queryStrings[static::$filterKey]));
+            // Verify that the split resulted in a valid pattern
+            $splitCount = count($splitClause);
+            if ($splitCount < 1 || $splitCount > 2) {
+                throw new InvalidArgumentException("An order by condition is invalid and resulted in a split of $splitCount terms.");
+            }
+
+            // Parse the direction and return an OrderByClause. The default order direction is ascending
+            $direction = $splitCount === 2 ? self::parseDirection(trim($splitClause[1])) : OrderDirection::ASC;
+            return new OrderByClause(trim($splitClause[0]), $direction);
+        }, $csvSplit);
     }
 
-    private static function setQueryParameterKeys(): void
+    /**
+     * Function to convert the string representation of an order direction to an enum
+     *
+     * @param string $direction The string representation of the order direction
+     *
+     * @return OrderDirection The parsed order direction
+     * @throws InvalidArgumentException If the direction is not asc or desc
+     */
+    private static function parseDirection(string $direction): OrderDirection
     {
-        static::$selectKey = static::getSelectKey();
-        static::$countKey = static::getCountKey();
-        static::$filterKey = static::getFilterKey();
-        static::$formatKey = static::getFormatKey();
-        static::$orderByKey = static::getOrderByKey();
-        static::$skipKey = static::getSkipKey();
-        static::$topKey = static::getTopKey();
-    }
-
-    private static function getSelectKey(): string
-    {
-        return static::$withDollar ? '$' . static::SELECT_KEY : static::SELECT_KEY;
-    }
-
-    private static function getCountKey(): string
-    {
-        return static::$withDollar ? '$' . static::COUNT_KEY : static::COUNT_KEY;
-    }
-
-    private static function getFilterKey(): string
-    {
-        return static::$withDollar ? '$' . static::FILTER_KEY : static::FILTER_KEY;
-    }
-
-    private static function getFormatKey(): string
-    {
-        return static::$withDollar ? '$' . static::FORMAT_KEY : static::FORMAT_KEY;
-    }
-
-    private static function getOrderByKey(): string
-    {
-        return static::$withDollar ? '$' . static::ORDER_BY_KEY : static::ORDER_BY_KEY;
-    }
-
-    private static function getSkipKey(): string
-    {
-        return static::$withDollar ? '$' . static::SKIP_KEY : static::SKIP_KEY;
-    }
-
-    private static function getTopKey(): string
-    {
-        return static::$withDollar ? '$' . static::TOP_KEY : static::TOP_KEY;
-    }
-
-    private static function getFilterOperatorName(string $operator): string
-    {
-        return match ($operator) {
-            "eq" => "equal",
-            "ne" => "notEqual",
-            "gt" => "greaterThan",
-            "ge" => "greaterOrEqual",
-            "lt" => "lowerThan",
-            "le" => "lowerOrEqual",
-            "in" => "in",
-            default => "unknown",
+        return match (strtolower($direction)) {
+            "asc" => OrderDirection::ASC,
+            "desc" => OrderDirection::DESC,
+            default => throw new InvalidArgumentException("Direction should be either asc or desc"),
         };
     }
 
-    private static function getFilterRightValue(string $operator, string $value): int|float|string|array
+    /**
+     * Function to split the filter part of a query string and return a list of filter clauses
+     *
+     * @param array<string, string> $queryString The query string to find the filter key in
+     *
+     * @return FilterClause[] The parsed list of filter clauses
+     * @throws InvalidArgumentException If an invalid operator is found, or the clause split found a clause that was incorrectly formed
+     */
+    private static function getFilter(array $queryString): array
     {
-        if ($operator !== "in") {
-            if (is_numeric($value)) {
-                if ((int) $value != $value) {
-                    return (float) $value;
-                } else {
-                    return (int) $value;
-                }
-            } else {
-                return str_replace("'", "", trim($value));
+        if (!(self::hasKey(self::$filter, $queryString)
+            && !empty(trim($queryString[self::$filter])))) {
+            return [];
+        }
+
+        $filterParts = explode("and", $queryString[self::$filter]);
+
+        return array_map(function (string $clause): FilterClause {
+            $clauseParts = [];
+            mb_ereg("(\w+)\s*([engliENGLI][qetnQETN])\s*([\w',()\s.]+)", $clause, $clauseParts);
+
+            /** Determine whether there are 4 array keys present in the result:
+             * $clauseParts[0]: the entire input string
+             * $clauseParts[1]: the left hand side (property)
+             * $clauseParts[2]: the operator
+             * $clauseParts[3]: the right hand side (value)
+             **/
+            if (count($clauseParts) !== 4) {
+                throw new InvalidArgumentException("A filter clause is invalid and resulted in a split of ".count($clauseParts)." terms.");
             }
-        } else {
-            $value = preg_replace("/^\s*\(|\)\s*$/", "", $value);
+
+            $operator = self::parseFilterOperator($clauseParts[2]);
+            $value = self::getFilterRightValue($clauseParts[3], $operator);
+            return new FilterClause($clauseParts[1], $operator, $value);
+        }, $filterParts);
+    }
+
+
+    /**
+     * Function to convert the string representation of a filter operator to an enum
+     *
+     * @param string $operator The string representation of the filter operator
+     *
+     * @return FilterOperator The parsed filter operator
+     * @throws InvalidArgumentException If the filter operator is not valid
+     */
+    private static function parseFilterOperator(string $operator): FilterOperator
+    {
+        return match (strtolower($operator)) {
+            "eq" => FilterOperator::EQUALS,
+            "ne" => FilterOperator::NOT_EQUALS,
+            "gt" => FilterOperator::GREATER_THAN,
+            "ge" => FilterOperator::GREATER_THAN_EQUALS,
+            "lt" => FilterOperator::LESS_THAN,
+            "le" => FilterOperator::LESS_THAN_EQUALS,
+            "in" => FilterOperator::IN,
+            default => throw new InvalidArgumentException("Filter operator should be eq, ne, gt, ge, lt, le or in."),
+        };
+    }
+
+    /**
+     * Function to parse the filter right value of a filter clause to the correct php datatype
+     *
+     * @param string $value The value to parse into an array, or it's native php datatype
+     * @param FilterOperator $operator The operator, dictates whether the value is considered a list or a single value
+     *
+     * @return int|float|string|bool|null|array<int|float|string|bool|null> Either a native php datatype, or an array with a mix or native php datatypes
+     */
+    private static function getFilterRightValue(string $value, FilterOperator $operator): int|float|string|bool|null|array
+    {
+        if ($operator === FilterOperator::IN) {
+            // Remove the start and end bracket, including possible whitespace from the list
+            $value = mb_ereg_replace("^\s*\(|\)\s*$", "", $value);
+
+            if (!is_string($value)) {
+                throw new LogicException("Could not execute regex replace on filter value.");
+            }
+
+            // Split the list in values
             $values = explode(",", $value);
 
-            return array_map(function ($value) {
-                return static::getFilterRightValue("equal", $value);
+            // Parse the value as a single comparison value
+            return array_map(function (string $value): int|float|string|bool|null {
+                return self::getFilterRightValueSingle($value);
             }, $values);
         }
+
+        // The value is not a list of values, parse the value as a single value into it's native php datatype
+        return self::getFilterRightValueSingle($value);
+    }
+
+    /**
+     * Function to parse the right side filter value if it's known that the value cannot be an array
+     *
+     * @param string $value The value to parse into it's native php datatype
+     *
+     * @return int|float|string|bool|null The value parsed as a native php datatype
+     */
+    private static function getFilterRightValueSingle(string $value): int|float|string|bool|null
+    {
+        // Trim the value before testing its datatype to prevent accidental mismatches
+        $value = trim($value);
+
+        // The operator is an equality operator, parse the value according to the inferred datatype
+        if (is_numeric($value)) {
+            if (intval($value) == $value) {
+                return intval($value);
+            }
+            return floatval($value);
+        }
+
+        if ($value === 'true' || $value === 'false') {
+            return $value === 'true';
+        }
+
+        // Either return the string with apostrophe's, or null, if the string without apostrophe's is empty
+        $stringRes = mb_ereg_replace("'", "", $value);
+        return empty($stringRes) ? null : $stringRes;
     }
 }

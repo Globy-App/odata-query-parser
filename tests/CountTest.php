@@ -3,71 +3,70 @@
 namespace OdataQueryParserTests;
 
 use GlobyApp\OdataQueryParser;
-use PHPUnit\Framework\TestCase;
 
-final class CountTest extends TestCase
+final class CountTest extends BaseTestCase
 {
     public function testShouldReturnCountTrueIfKeyFilledWithTrue(): void
     {
-        $expected = ["count" => true];
-        $actual = OdataQueryParser::parse('https://example.com/api/user?$count=1');
+        $expected = new OdataQueryParser\OdataQuery([], true);
+        $actual = OdataQueryParser\OdataQueryParser::parse('https://example.com/api/user?$count=1');
 
-        $this->assertEquals($expected, $actual);
+        $this->assertOdataQuerySame($expected, $actual);
     }
 
     public function testShouldReturnCountTrueIfKeyFilledWithTrueAndSpaces(): void
     {
-        $expected = ["count" => true];
-        $actual = OdataQueryParser::parse('https://example.om/api/user?$count=%201%20');
+        $expected = new OdataQueryParser\OdataQuery([], true);
+        $actual = OdataQueryParser\OdataQueryParser::parse('https://example.om/api/user?$count=%201%20');
 
-        $this->assertEquals($expected, $actual);
+        $this->assertOdataQuerySame($expected, $actual);
     }
 
     public function testShouldNotReturnCountIfKeyFilledWithFalse(): void
     {
-        $expected = [];
-        $actual = OdataQueryParser::parse('https://example.com/api/user?$count=0');
+        $expected = new OdataQueryParser\OdataQuery([], false);
+        $actual = OdataQueryParser\OdataQueryParser::parse('https://example.com/api/user?$count=0');
 
-        $this->assertEquals($expected, $actual);
+        $this->assertOdataQuerySame($expected, $actual);
     }
 
     public function testShouldNotReturnCountIfKeyFilledWithFalseAndSpaces(): void
     {
-        $expected = [];
-        $actual = OdataQueryParser::parse('https://example.com/api/user?$count=%200%20');
+        $expected = new OdataQueryParser\OdataQuery([], false);
+        $actual = OdataQueryParser\OdataQueryParser::parse('https://example.com/api/user?$count=%200%20');
 
-        $this->assertEquals($expected, $actual);
+        $this->assertOdataQuerySame($expected, $actual);
     }
 
     public function testShouldReturnCountTrueIfKeyFillWithTrueInNonDollarMode(): void
     {
-        $expected = ["count" => true];
-        $actual = OdataQueryParser::parse("https://example.com/api/user?count=1", false);
+        $expected = new OdataQueryParser\OdataQuery([], true);
+        $actual = OdataQueryParser\OdataQueryParser::parse("https://example.com/api/user?count=1", false);
 
-        $this->assertEquals($expected, $actual);
+        $this->assertOdataQuerySame($expected, $actual);
     }
 
     public function testShouldReturnCountTrueIfKeyFilledWithTrueAndSpacesInNonDollarMode(): void
     {
-        $expected = ["count" => true];
-        $actual = OdataQueryParser::parse('https://example.com/api/user?count=%201%20', false);
+        $expected = new OdataQueryParser\OdataQuery([], true);
+        $actual = OdataQueryParser\OdataQueryParser::parse('https://example.com/api/user?count=%201%20', false);
 
-        $this->assertEquals($expected, $actual);
+        $this->assertOdataQuerySame($expected, $actual);
     }
 
     public function testShouldNotReturnCountIfKeyFilledWithFalseInNonDollarMode(): void
     {
-        $expected = [];
-        $actual = OdataQueryParser::parse("https://example.com/api/user?count=0", false);
+        $expected = new OdataQueryParser\OdataQuery([], false);
+        $actual = OdataQueryParser\OdataQueryParser::parse("https://example.com/api/user?count=0", false);
 
-        $this->assertEquals($expected, $actual);
+        $this->assertOdataQuerySame($expected, $actual);
     }
 
     public function testShouldNotReturnCountIfKeyFilledWithFalseAndSpacesInNonDollarMode(): void
     {
-        $expected = [];
-        $actual = OdataQueryParser::parse('https://example.com/api/user?count=%200%20', false);
+        $expected = new OdataQueryParser\OdataQuery([], false);
+        $actual = OdataQueryParser\OdataQueryParser::parse('https://example.com/api/user?count=%200%20', false);
 
-        $this->assertEquals($expected, $actual);
+        $this->assertOdataQuerySame($expected, $actual);
     }
 }

@@ -4,101 +4,107 @@ namespace OdataQueryParserTests;
 
 use GlobyApp\OdataQueryParser;
 use InvalidArgumentException;
-use PHPUnit\Framework\TestCase;
 
-final class SkipTest extends TestCase
+final class SkipTest extends BaseTestCase
 {
     public function testShouldThrowAnInvalidArgumentExceptionIfSkipParameterIsLowerThanZero(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage("skip should be greater or equal to zero");
+        $this->expectExceptionMessage("Skip should be greater or equal to zero");
 
-        OdataQueryParser::parse('https://example.com/?$skip=-1');
+        OdataQueryParser\OdataQueryParser::parse('https://example.com/?$skip=-1');
     }
 
     public function testShouldThrowAnInvalidArgumentExceptionIfSkipIsNotAnInteger(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage("skip should be an integer");
+        $this->expectExceptionMessage("Invalid datatype for \$skip");
 
-        OdataQueryParser::parse('https://example.com/?$skip=test');
+        OdataQueryParser\OdataQueryParser::parse('https://example.com/?$skip=test');
     }
 
     public function testShouldContainTheSkipValueIfProvidedInQueryParameters(): void
     {
-        $expected = ["skip" => 42];
-        $actual = OdataQueryParser::parse('https://example.com/api/user?$skip=42');
+        $expected = new OdataQueryParser\OdataQuery([], null, null, 42);
+        $actual = OdataQueryParser\OdataQueryParser::parse('https://example.com/api/user?$skip=42');
 
-        $this->assertEquals($expected, $actual);
+        $this->assertOdataQuerySame($expected, $actual);
     }
 
     public function testShouldContainTheSkipValueIfProvidedInTheQueryParameterAndFilledWithSpaces(): void
     {
-        $expected = ["skip" => 42];
-        $actual = OdataQueryParser::parse('https://example.com/api/user?$skip=%2042%20');
+        $expected = new OdataQueryParser\OdataQuery([], null, null, 42);
+        $actual = OdataQueryParser\OdataQueryParser::parse('https://example.com/api/user?$skip=%2042%20');
 
-        $this->assertEquals($expected, $actual);
+        $this->assertOdataQuerySame($expected, $actual);
     }
 
     public function testShouldContainAnEmptyArrayIfSkipParameterIsEmpty(): void
     {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage("skip should be an integer");
+        $expected = new OdataQueryParser\OdataQuery();
+        $actual = OdataQueryParser\OdataQueryParser::parse('https://example.com/api/user?$skip=');
 
-        OdataQueryParser::parse('https://example.com/api/user?$skip=');
+        $this->assertOdataQuerySame($expected, $actual);
     }
 
     public function testShouldNotThrowExceptionIfSkipIsEqualToZero(): void
     {
-        $expected = ["skip" => 0];
-        $actual = OdataQueryParser::parse('https://example.com/api/user?$skip=0');
+        $expected = new OdataQueryParser\OdataQuery([], null, null, 0);
+        $actual = OdataQueryParser\OdataQueryParser::parse('https://example.com/api/user?$skip=0');
 
-        $this->assertEquals($expected, $actual);
+        $this->assertOdataQuerySame($expected, $actual);
+    }
+
+    public function testShouldNotThrowExceptionIfSkipIsEqualToZeroWithSpace(): void
+    {
+        $expected = new OdataQueryParser\OdataQuery([], null, null, 0);
+        $actual = OdataQueryParser\OdataQueryParser::parse('https://example.com/api/user?$skip=%200');
+
+        $this->assertOdataQuerySame($expected, $actual);
     }
 
     public function testShouldReturnAnIntegerForTheSkipValue(): void
     {
-        $this->assertIsInt(OdataQueryParser::parse('https://example.com/api/user?$skip=42')["skip"]);
+        $this->assertIsInt(OdataQueryParser\OdataQueryParser::parse('https://example.com/api/user?$skip=42')?->getSkip());
     }
 
-    // skip (non dollar mode)
-    public function testShouldThrowAnInvalidArgumentExceptionIfSkipParameterIsLowerThanZeroInNonDolalrMode(): void
+    public function testShouldThrowAnInvalidArgumentExceptionIfSkipParameterIsLowerThanZeroInNonDollarMode(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage("skip should be greater or equal to zero");
+        $this->expectExceptionMessage("Skip should be greater or equal to zero");
 
-        OdataQueryParser::parse('https://example.com/?skip=-1', false);
+        OdataQueryParser\OdataQueryParser::parse('https://example.com/?skip=-1', false);
     }
 
     public function testShouldThrowAnInvalidArgumentExceptionIfSkipIsNotAnIntegerInNonDollarMode(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage("skip should be an integer");
+        $this->expectExceptionMessage("Invalid datatype for skip");
 
-        OdataQueryParser::parse('https://example.com/?skip=test', false);
+        OdataQueryParser\OdataQueryParser::parse('https://example.com/?skip=test', false);
     }
 
     public function testShouldContainTheSkipValueIfProvidedInQueryParametersInNonDollarMode(): void
     {
-        $expected = ["skip" => 42];
-        $actual = OdataQueryParser::parse('https://example.com/api/user?skip=42', false);
+        $expected = new OdataQueryParser\OdataQuery([], null, null, 42);
+        $actual = OdataQueryParser\OdataQueryParser::parse('https://example.com/api/user?skip=42', false);
 
-        $this->assertEquals($expected, $actual);
+        $this->assertOdataQuerySame($expected, $actual);
     }
 
     public function testShouldContainTheSkipValueIfProvidedInTheQueryParameterAndFilledWithSpacesInNonDollarMode(): void
     {
-        $expected = ["skip" => 42];
-        $actual = OdataQueryParser::parse('https://example.com/api/user?skip=%2042%20', false);
+        $expected = new OdataQueryParser\OdataQuery([], null, null, 42);
+        $actual = OdataQueryParser\OdataQueryParser::parse('https://example.com/api/user?skip=%2042%20', false);
 
-        $this->assertEquals($expected, $actual);
+        $this->assertOdataQuerySame($expected, $actual);
     }
 
     public function testShouldContainAnEmptyArrayIfSkipParameterIsEmptyInNonDollarMode(): void
     {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage("skip should be an integer");
+        $expected = new OdataQueryParser\OdataQuery();
+        $actual = OdataQueryParser\OdataQueryParser::parse('https://example.com/api/user?skip=', false);
 
-        OdataQueryParser::parse('https://example.com/api/user?skip=', false);
+        $this->assertOdataQuerySame($expected, $actual);
     }
 }

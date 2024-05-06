@@ -4,60 +4,67 @@ namespace OdataQueryParserTests;
 
 use GlobyApp\OdataQueryParser;
 use InvalidArgumentException;
-use PHPUnit\Framework\TestCase;
 
-final class TopTest extends TestCase
+final class TopTest extends BaseTestCase
 {
     public function testShouldThrowAnInvalidArgumentExceptionIfTopQueryParameterIsLowerThanZero(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage("top should be greater or equal to zero");
+        $this->expectExceptionMessage("Top should be greater or equal to zero");
 
-        OdataQueryParser::parse('https://example.com/users?$top=-1');
+        OdataQueryParser\OdataQueryParser::parse('https://example.com/users?$top=-1');
     }
 
     public function testShouldNotThrowExceptionIfTopQueryParameterIsEqualToZero(): void
     {
-        $expected = ["top" => 0];
-        $actual = OdataQueryParser::parse('https://example.com/api/user/?$top=0');
+        $expected = new OdataQueryParser\OdataQuery([], null, 0);
+        $actual = OdataQueryParser\OdataQueryParser::parse('https://example.com/api/user/?$top=0');
 
-        $this->assertEquals($expected, $actual);
+        $this->assertOdataQuerySame($expected, $actual);
     }
 
     public function testShouldThrowAnExceptionIfTopQueryParameterIsLowerThanZeroAndFilledWithSpaces(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage("top should be greater or equal to zero");
+        $this->expectExceptionMessage("Top should be greater or equal to zero");
 
-        OdataQueryParser::parse('https://example.com/users?$top=%20-1%20');
+        OdataQueryParser\OdataQueryParser::parse('https://example.com/users?$top=%20-1%20');
     }
 
     public function testShouldThrowAnInvalidArgumentExceptionIfTopIsNotAnInteger(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage("top should be an integer");
+        $this->expectExceptionMessage("Invalid datatype for \$top");
 
-        OdataQueryParser::parse('https://example.com/?$top=foo');
+        OdataQueryParser\OdataQueryParser::parse('https://example.com/?$top=foo');
     }
 
     public function testShouldReturnTheTopValueIfProvidedInTheQueryParameters(): void
     {
-        $expected = ["top" => 42];
-        $actual = OdataQueryParser::parse('https://example.com/?$top=42');
+        $expected = new OdataQueryParser\OdataQuery([], null, 42);
+        $actual = OdataQueryParser\OdataQueryParser::parse('https://example.com/?$top=42');
 
-        $this->assertEquals($expected, $actual);
+        $this->assertOdataQuerySame($expected, $actual);
     }
 
     public function testShouldReturnAnIntegerTopValue(): void
     {
-        $this->assertIsInt(OdataQueryParser::parse('https://example.com/api/user?$top=42')["top"]);
+        $this->assertIsInt(OdataQueryParser\OdataQueryParser::parse('https://example.com/api/user?$top=42')?->getTop());
     }
 
     public function testShouldReturnTheTopValueIfProvidedInTheQueryParametersAndFilledWithSpaces(): void
     {
-        $expected = ["top" => 42];
-        $actual = OdataQueryParser::parse('https://example.com/api/user?$top=%2042%20');
+        $expected = new OdataQueryParser\OdataQuery([], null, 42);
+        $actual = OdataQueryParser\OdataQueryParser::parse('https://example.com/api/user?$top=%2042%20');
 
-        $this->assertEquals($expected, $actual);
+        $this->assertOdataQuerySame($expected, $actual);
+    }
+
+    public function testShouldReturnNullIfTopIsEmpty(): void
+    {
+        $expected = new OdataQueryParser\OdataQuery();
+        $actual = OdataQueryParser\OdataQueryParser::parse('https://example.com/api/user?$top=%20');
+
+        $this->assertOdataQuerySame($expected, $actual);
     }
 }

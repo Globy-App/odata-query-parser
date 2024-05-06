@@ -13,6 +13,7 @@ Parse OData v4 query strings, outputs proper PHP objects.
 - [Examples](#examples)
 - [API](#api)
 - [Known issues](#known-issues)
+- [Thanks](#thanks)
 
 ## About
 
@@ -29,7 +30,7 @@ As I did not see a package exclusively dealing with parsing the query strings, a
 
 ## Requirements
 
-- PHP >= 8.1.0
+- PHP >= 8.2.0
 - [Composer](https://getcomposer.org/)
 
 ## Installation
@@ -41,9 +42,6 @@ composer require globyapp/odata-query-parser
 ```
 
 ## Examples
-
-- [1. Use \$select to filter on some fields](#1-use-select-to-filter-on-some-fields)
-- [2. Use non dollar syntax](#2-use-non-dollar-syntax)
 
 ### 1. Use \$select to filter on some fields
 
@@ -141,3 +139,9 @@ Filter = [
 ## Known issues
 
 - `$filter` command will not parse `or` and functions (like `contains()` of `substringof`), because I did not focus on this for the moment (the parser for `$filter` is too simplistic, I should find a way to create an AST).
+
+## Thanks
+Feel free to open any issues or PRs.
+
+---
+MIT &copy; 2024
