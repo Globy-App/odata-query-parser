@@ -1,4 +1,4 @@
-# odata-query-parser
+# Odata Query Parser
 
 Parse OData v4 query strings, outputs proper PHP objects.
 
@@ -48,7 +48,7 @@ composer require globyapp/odata-query-parser
 In this example, we will use the `$select` OData query string command to filter the fields returned by our API.
 
 ```php
-use GlobyApp\OdataQueryParser;
+use GlobyApp\OdataQueryParser\OdataQueryParser;
 
 $data = OdataQueryParser::parse('https://example.com/api/user?$select=id,name,age');
 ```
@@ -56,13 +56,18 @@ $data = OdataQueryParser::parse('https://example.com/api/user?$select=id,name,ag
 If you inspect `$data`, this is what you will get:
 
 ```php
-[
-  "select" => [
-    "id",
-    "name",
-    "age"
-  ]
-]
+object(GlobyApp\OdataQueryParser\OdataQuery)#2 (6) {
+  ["select":"GlobyApp\OdataQueryParser\OdataQuery":private]=>
+  array(3) {
+    [0]=>
+    string(2) "id"
+    [1]=>
+    string(4) "name"
+    [2]=>
+    string(3) "age"
+  }
+  ...
+}
 ```
 
 ### 2. Use non dollar syntax
@@ -70,7 +75,7 @@ If you inspect `$data`, this is what you will get:
 In this example, we will use a unique feature of this library: to be able to not specify any dollar, while still being able to use the OData v4 URL query parameter grammar.
 
 ```php
-use GlobyApp\OdataQueryParser;
+use GlobyApp\OdataQueryParser\OdataQueryParser;
 
 $data = OdataQueryParser::parse("https://example.com/api/user?select=id,name,age", $withDollar = false);
 ```
@@ -78,55 +83,60 @@ $data = OdataQueryParser::parse("https://example.com/api/user?select=id,name,age
 If you inspect `$data`, this is what you will get:
 
 ```php
-[
-  "select" => [
-    "id",
-    "name",
-    "age"
-  ]
-]
+object(GlobyApp\OdataQueryParser\OdataQuery)#2 (6) {
+  ["select":"GlobyApp\OdataQueryParser\OdataQuery":private]=>
+  array(3) {
+    [0]=>
+    string(2) "id"
+    [1]=>
+    string(4) "name"
+    [2]=>
+    string(3) "age"
+  }
+  ...
+}
 ```
 
 ## API
 
 ```php
-OdataQueryParser::parse(string $url, bool $withDollar = true): array;
+OdataQueryParser::parse(string $url, bool $withDollar = true): OdataQuery;
 ```
 
-**parameters**
+### Parameters
 
 - string `$url`: The URL to parse the query strings from. It should be a "complete" or "full" URL, which means that `https://example.com` will pass while `example.com` will not pass
 - bool `$withDollar`: Set it to false if you want to parse query strings without having to add the `$` signs before each key.
 
-**returns**
+### Returns
 
-An associative array:
+An OdataQuery object:
 
 ```php
-return = [
-	string? "select" => array<string>,
-	string? "count" => bool,
-	string? "top" => int,
-	string? "skip" => int,
-	string? "orderBy" => array<OrderBy>,
-	string? "filter" => array<Filter>
-];
+return = OdataQuery {
+	select => array<string>,
+	count => bool|null,
+	top => int|null,
+	skip => int|null,
+	orderBy => array<OrderByClause>,
+	filter => array<FilterClause>
+};
 
-OrderBy = [
-	string "property" => string,
-	string "direction" => Direction
-]
+OrderByClause {
+	property => string,
+	direction => OrderDirection
+}
 
-Direction = "asc" | "desc"
+OrderDirection = "ASC" | "DESC"
 
-Filter = [
-	string "left" => string,
-	string "operator" => string,
-	string "right" => mixed
-]
+FilterClause {
+	property => string,
+	operator => string,
+	value => int|float|string|bool|null|array<int|float|string|bool|null>
+}
 ```
 
-**throws**
+### Throws
 
 - `InvalidArgumentException`
   - If the parameter `$url` is not a valid URL (see the parameter description to know what is a valid URL)
@@ -134,7 +144,14 @@ Filter = [
   - If the `$top` query string value is lower than 0
   - If the `$skip` query string value is not an integer
   - If the `$skip` query string value is lower than 0
-  - If the direction of the `$orderby` query string value is neither `asc` or `desc`
+  - If the `$count` query string value is not a boolean
+  - If the formatting of `$orderby` is not valid (should be a property, space and the direction)
+  - If the direction of the `$orderby` query string value is neither `asc` or `desc` (case-insensitive)
+  - If the formatting of `$filter` is not valid (should be a property, space, operator, space and value)
+  - If the operator of the `$filter` query string value is not `eq`, `ne`, `gt`, `ge`, `lt`, `le` or `in` (case-insensitive)
+- `LogicException`
+  - If an unforeseen edge case is triggered by an input value. For example when a regex operation fails. Should never be thrown under normal operation.
+    - If an edge case is found, please report them as an issue. Currently, I cannot write test cases for them as I don't know how to trigger them.
 
 ## Known issues
 
