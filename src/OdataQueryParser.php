@@ -326,7 +326,7 @@ class OdataQueryParser
      */
     private static function parseDirection(string $direction): OrderDirection
     {
-        return match (mb_strtolower($direction)) {
+        return match (strtolower($direction)) {
             "asc" => OrderDirection::ASC,
             "desc" => OrderDirection::DESC,
             default => throw new InvalidArgumentException("Direction should be either asc or desc"),
@@ -352,7 +352,7 @@ class OdataQueryParser
 
         return array_map(function (string $clause): FilterClause {
             $clauseParts = [];
-            mb_ereg("(\w+)\s*(eq|ne|gt|ge|lt|le|in)\s*([\w',()\s.]+)", $clause, $clauseParts);
+            mb_ereg("(\w+)\s*([engliENGLI][qetnQETN])\s*([\w',()\s.]+)", $clause, $clauseParts);
 
             /** Determine whether there are 4 array keys present in the result:
              * $clauseParts[0]: the entire input string
@@ -381,7 +381,7 @@ class OdataQueryParser
      */
     private static function parseFilterOperator(string $operator): FilterOperator
     {
-        return match (mb_strtolower($operator)) {
+        return match (strtolower($operator)) {
             "eq" => FilterOperator::EQUALS,
             "ne" => FilterOperator::NOT_EQUALS,
             "gt" => FilterOperator::GREATER_THAN,
@@ -389,7 +389,7 @@ class OdataQueryParser
             "lt" => FilterOperator::LESS_THAN,
             "le" => FilterOperator::LESS_THAN_EQUALS,
             "in" => FilterOperator::IN,
-            default => throw new InvalidArgumentException("Filter operator should be eq, ne, gt, ge, lt, le or in"),
+            default => throw new InvalidArgumentException("Filter operator should be eq, ne, gt, ge, lt, le or in."),
         };
     }
 

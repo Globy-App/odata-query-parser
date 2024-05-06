@@ -53,4 +53,20 @@ final class SelectTest extends BaseTestCase
 
         $this->assertOdataQuerySame($expected, $actual);
     }
+
+    public function testShouldReturnAnEmptyArrayIfNoColumnFoundWithSpace(): void
+    {
+        $expected = new OdataQueryParser\OdataQuery();
+        $actual = OdataQueryParser\OdataQueryParser::parse('https://example.com/?$select=%20%20');
+
+        $this->assertOdataQuerySame($expected, $actual);
+    }
+
+    public function testShouldReturnAnEmptyArrayIfNoColumnFoundInNonDollarModeWithSpace(): void
+    {
+        $expected = new OdataQueryParser\OdataQuery();
+        $actual = OdataQueryParser\OdataQueryParser::parse('https://example.com/?select=%20%20');
+
+        $this->assertOdataQuerySame($expected, $actual);
+    }
 }

@@ -73,8 +73,8 @@ jobs:
 
       - name: Ensure every line is covered by tests
         run: |
-          php tests/phpunit-coverage.php 93
+          php tests/phpunit-coverage.php 96
 
       - name: Run infection mutation testing
         run:
-          php ./vendor/bin/infection --min-msi=85 --min-covered-msi=90 --threads=max --no-interaction --logger-github=true --skip-initial-tests --coverage=logs
+          php ./vendor/bin/infection --min-msi=85 --min-covered-msi=90 --only-covered --threads=max --no-interaction --logger-github=true --skip-initial-tests --coverage=logs

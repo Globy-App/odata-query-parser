@@ -13,6 +13,13 @@ final class FilterTest extends BaseTestCase
 
         $this->assertOdataQuerySame($expected, $actual);
     }
+    public function testShouldReturnEmptyArrayIfEmptyFilterWithSpaces(): void
+    {
+        $expected = new OdataQueryParser\OdataQuery();
+        $actual = OdataQueryParser\OdataQueryParser::parse("https://example.com/api/user?\$filter=%20%20");
+
+        $this->assertOdataQuerySame($expected, $actual);
+    }
 
     public function testShouldReturnEqualClause(): void
     {
@@ -20,6 +27,16 @@ final class FilterTest extends BaseTestCase
             new OdataQueryParser\Datatype\FilterClause('name', OdataQueryParser\Enum\FilterOperator::EQUALS, 'foo'),
         ]);
         $actual = OdataQueryParser\OdataQueryParser::parse("https://example.com/api/user?\$filter=name%20eq%20%27foo%27");
+
+        $this->assertOdataQuerySame($expected, $actual);
+    }
+
+    public function testShouldReturnEqualClauseMixedCase(): void
+    {
+        $expected = new OdataQueryParser\OdataQuery([], null, null, null, [], [
+            new OdataQueryParser\Datatype\FilterClause('name', OdataQueryParser\Enum\FilterOperator::EQUALS, 'foo'),
+        ]);
+        $actual = OdataQueryParser\OdataQueryParser::parse("https://example.com/api/user?\$filter=name%20eQ%20%27foo%27");
 
         $this->assertOdataQuerySame($expected, $actual);
     }
@@ -54,12 +71,32 @@ final class FilterTest extends BaseTestCase
         $this->assertOdataQuerySame($expected, $actual);
     }
 
+    public function testShouldReturnNotEqualClauseMixedCase(): void
+    {
+        $expected = new OdataQueryParser\OdataQuery([], null, null, null, [], [
+            new OdataQueryParser\Datatype\FilterClause('name', OdataQueryParser\Enum\FilterOperator::NOT_EQUALS, 'foo'),
+        ]);
+        $actual = OdataQueryParser\OdataQueryParser::parse("https://example.com/api/user?\$filter=name%20Ne%20%27foo%27");
+
+        $this->assertOdataQuerySame($expected, $actual);
+    }
+
     public function testShouldReturnGreaterThanClause(): void
     {
         $expected = new OdataQueryParser\OdataQuery([], null, null, null, [], [
             new OdataQueryParser\Datatype\FilterClause('age', OdataQueryParser\Enum\FilterOperator::GREATER_THAN, 20),
         ]);
         $actual = OdataQueryParser\OdataQueryParser::parse("https://example.com/api/user?\$filter=age%20gt%2020");
+
+        $this->assertOdataQuerySame($expected, $actual);
+    }
+
+    public function testShouldReturnGreaterThanClauseMixedCase(): void
+    {
+        $expected = new OdataQueryParser\OdataQuery([], null, null, null, [], [
+            new OdataQueryParser\Datatype\FilterClause('age', OdataQueryParser\Enum\FilterOperator::GREATER_THAN, 20),
+        ]);
+        $actual = OdataQueryParser\OdataQueryParser::parse("https://example.com/api/user?\$filter=age%20Gt%2020");
 
         $this->assertOdataQuerySame($expected, $actual);
     }
@@ -74,12 +111,32 @@ final class FilterTest extends BaseTestCase
         $this->assertOdataQuerySame($expected, $actual);
     }
 
+    public function testShouldReturnGreaterOrEqualToClauseMixedCase(): void
+    {
+        $expected = new OdataQueryParser\OdataQuery([], null, null, null, [], [
+            new OdataQueryParser\Datatype\FilterClause('age', OdataQueryParser\Enum\FilterOperator::GREATER_THAN_EQUALS, 21),
+        ]);
+        $actual = OdataQueryParser\OdataQueryParser::parse("https://example.com/api/user?\$filter=age%20gE%2021");
+
+        $this->assertOdataQuerySame($expected, $actual);
+    }
+
     public function testShouldReturnLowerThanClause(): void
     {
         $expected = new OdataQueryParser\OdataQuery([], null, null, null, [], [
             new OdataQueryParser\Datatype\FilterClause('age', OdataQueryParser\Enum\FilterOperator::LESS_THAN, 42),
         ]);
         $actual = OdataQueryParser\OdataQueryParser::parse("https://example.com/api/user?\$filter=age%20lt%2042");
+
+        $this->assertOdataQuerySame($expected, $actual);
+    }
+
+    public function testShouldReturnLowerThanClauseMixedCase(): void
+    {
+        $expected = new OdataQueryParser\OdataQuery([], null, null, null, [], [
+            new OdataQueryParser\Datatype\FilterClause('age', OdataQueryParser\Enum\FilterOperator::LESS_THAN, 42),
+        ]);
+        $actual = OdataQueryParser\OdataQueryParser::parse("https://example.com/api/user?\$filter=age%20lT%2042");
 
         $this->assertOdataQuerySame($expected, $actual);
     }
@@ -94,6 +151,16 @@ final class FilterTest extends BaseTestCase
         $this->assertOdataQuerySame($expected, $actual);
     }
 
+    public function testShouldReturnLowerOrEqualToClauseMixedCase(): void
+    {
+        $expected = new OdataQueryParser\OdataQuery([], null, null, null, [], [
+            new OdataQueryParser\Datatype\FilterClause('age', OdataQueryParser\Enum\FilterOperator::LESS_THAN_EQUALS, 42),
+        ]);
+        $actual = OdataQueryParser\OdataQueryParser::parse("https://example.com/api/user?\$filter=age%20Le%2042");
+
+        $this->assertOdataQuerySame($expected, $actual);
+    }
+
     public function testShouldReturnInClause(): void
     {
         $expected = new OdataQueryParser\OdataQuery([], null, null, null, [], [
@@ -101,6 +168,17 @@ final class FilterTest extends BaseTestCase
                 ["Paris", "Malaga", "London"]),
         ]);
         $actual = OdataQueryParser\OdataQueryParser::parse("https://example.com/api/user?\$filter=city%20in%20(%27Paris%27,%20%27Malaga%27,%20%27London%27)");
+
+        $this->assertOdataQuerySame($expected, $actual);
+    }
+
+    public function testShouldReturnInClauseMixedCase(): void
+    {
+        $expected = new OdataQueryParser\OdataQuery([], null, null, null, [], [
+            new OdataQueryParser\Datatype\FilterClause('city', OdataQueryParser\Enum\FilterOperator::IN,
+                ["Paris", "Malaga", "London"]),
+        ]);
+        $actual = OdataQueryParser\OdataQueryParser::parse("https://example.com/api/user?\$filter=city%20In%20(%27Paris%27,%20%27Malaga%27,%20%27London%27)");
 
         $this->assertOdataQuerySame($expected, $actual);
     }
@@ -158,5 +236,37 @@ final class FilterTest extends BaseTestCase
     {
         $bool = OdataQueryParser\OdataQueryParser::parse("https://example.com/api/user?\$filter=taxRate%20eq%20false")?->getFilter()[0]->getValue();
         $this->assertFalse($bool);
+    }
+
+    public function testInvalidOperator(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage("Filter operator should be eq, ne, gt, ge, lt, le or in");
+
+        OdataQueryParser\OdataQueryParser::parse("https://example.com/api/user?\$filter=taxRate%20GQ%20false");
+    }
+
+    public function testInvalidOperatorInNonDollarMode(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage("Filter operator should be eq, ne, gt, ge, lt, le or in.");
+
+        OdataQueryParser\OdataQueryParser::parse("https://example.com/api/user?filter=taxRate%20GQ%20false", false);
+    }
+
+    public function testInvalidStructure(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage("A filter clause is invalid and resulted in a split of 0 terms.");
+
+        OdataQueryParser\OdataQueryParser::parse("https://example.com/api/user?\$filter=taxRate%20le");
+    }
+
+    public function testInvalidStructureInNonDollarMode(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage("A filter clause is invalid and resulted in a split of 0 terms.");
+
+        OdataQueryParser\OdataQueryParser::parse("https://example.com/api/user?filter=taxRate%20le", false);
     }
 }

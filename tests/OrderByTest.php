@@ -46,6 +46,14 @@ final class OrderByTest extends BaseTestCase
         $this->assertOdataQuerySame($expected, $actual);
     }
 
+    public function testShouldReturnAnEmptyArrayIfOrderByIsEmptyWithSpace(): void
+    {
+        $expected = new OdataQueryParser\OdataQuery();
+        $actual = OdataQueryParser\OdataQueryParser::parse('https://example.com/api/user?$orderby=%20%20');
+
+        $this->assertOdataQuerySame($expected, $actual);
+    }
+
     public function testShouldReturnOrderByPropertyInAscDirectionIfSpecified(): void
     {
         $expected = new OdataQueryParser\OdataQuery([], null, null, null, [
@@ -76,6 +84,16 @@ final class OrderByTest extends BaseTestCase
         $this->assertOdataQuerySame($expected, $actual);
     }
 
+    public function testShouldReturnThePropertyInDescDirectionIfSpecifiedMixedCase(): void
+    {
+        $expected = new OdataQueryParser\OdataQuery([], null, null, null, [
+            new OdataQueryParser\Datatype\OrderByClause('foo', OdataQueryParser\Enum\OrderDirection::DESC),
+        ]);
+        $actual = OdataQueryParser\OdataQueryParser::parse('https://example.com/api/user?$orderby=foo%20dESc');
+
+        $this->assertOdataQuerySame($expected, $actual);
+    }
+
     public function testShouldReturnThePropertyInDescDirectionIfSpecifiedEvenIfFilledWithSpaces(): void
     {
         $expected = new OdataQueryParser\OdataQuery([], null, null, null, [
@@ -92,6 +110,14 @@ final class OrderByTest extends BaseTestCase
         $this->expectExceptionMessage("Direction should be either asc or desc");
 
         OdataQueryParser\OdataQueryParser::parse('https://example.com/api/user?$orderby=foo%20ascendant');
+    }
+
+    public function testShouldThrowExceptionIfTooManyArguments(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage("An order by condition is invalid and resulted in a split of 3 terms.");
+
+        OdataQueryParser\OdataQueryParser::parse('https://example.com/api/user?$orderby=foo%20asc%20third');
     }
 
     public function testShouldReturnThePropertyInTheOrderByInNonDollarMode(): void
@@ -118,6 +144,14 @@ final class OrderByTest extends BaseTestCase
     {
         $expected = new OdataQueryParser\OdataQuery();
         $actual = OdataQueryParser\OdataQueryParser::parse('https://example.com/api/user?orderby=', false);
+
+        $this->assertOdataQuerySame($expected, $actual);
+    }
+
+    public function testShouldReturnAnEmptyArrayIfOrderByIsEmptyInNonDollarModeWithSpace(): void
+    {
+        $expected = new OdataQueryParser\OdataQuery();
+        $actual = OdataQueryParser\OdataQueryParser::parse('https://example.com/api/user?orderby=%20%20', false);
 
         $this->assertOdataQuerySame($expected, $actual);
     }
@@ -152,6 +186,16 @@ final class OrderByTest extends BaseTestCase
         $this->assertOdataQuerySame($expected, $actual);
     }
 
+    public function testShouldReturnThePropertyInDescDirectionIfSpecifiedInNonDollarModeMixedCase(): void
+    {
+        $expected = new OdataQueryParser\OdataQuery([], null, null, null, [
+            new OdataQueryParser\Datatype\OrderByClause('foo', OdataQueryParser\Enum\OrderDirection::DESC),
+        ]);
+        $actual = OdataQueryParser\OdataQueryParser::parse('https://example.com/api/user?orderby=foo%20dESC', false);
+
+        $this->assertOdataQuerySame($expected, $actual);
+    }
+
     public function testShouldReturnThePropertyInDescDirectionIfSpecifiedInNonDollarModeEvenIfFilledWithSpaces(): void
     {
         $expected = new OdataQueryParser\OdataQuery([], null, null, null, [
@@ -168,5 +212,13 @@ final class OrderByTest extends BaseTestCase
         $this->expectExceptionMessage("Direction should be either asc or desc");
 
         OdataQueryParser\OdataQueryParser::parse('https://example.com/api/user?orderby=foo%20ascendant', false);
+    }
+
+    public function testShouldThrowExceptionIfTooManyArgumentsInNonDollarMode(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage("An order by condition is invalid and resulted in a split of 3 terms.");
+
+        OdataQueryParser\OdataQueryParser::parse('https://example.com/api/user?orderby=foo%20asc%20third', false);
     }
 }
