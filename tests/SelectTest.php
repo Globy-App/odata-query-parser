@@ -3,17 +3,15 @@
 namespace OdataQueryParserTests;
 
 use GlobyApp\OdataQueryParser;
-use PHPUnit\Framework\TestCase;
 
-final class SelectTest extends TestCase
+final class SelectTest extends BaseTestCase
 {
     public function testShouldReturnSelectColumns(): void
     {
         $expected = new OdataQueryParser\OdataQuery(["name", "type", "userId"]);
         $actual = OdataQueryParser\OdataQueryParser::parse('https://example.com/users?$select=name,type,userId');
 
-        $this->assertEquals($expected, $actual);
-        $this->assertEquals($expected->getSelect(), $actual?->getSelect());
+        $this->assertOdataQuerySame($expected, $actual);
     }
 
     public function testShouldReturnSelectColumnsIfFilledWithSpaces(): void
@@ -21,8 +19,7 @@ final class SelectTest extends TestCase
         $expected = new OdataQueryParser\OdataQuery(["name", "type", "userId"]);
         $actual = OdataQueryParser\OdataQueryParser::parse('https://example.com/api/user?$select=%20name,%20type%20,userId%20');
 
-        $this->assertEquals($expected, $actual);
-        $this->assertEquals($expected->getSelect(), $actual?->getSelect());
+        $this->assertOdataQuerySame($expected, $actual);
     }
 
     public function testShouldReturnTheColumnsInNonDollarMode(): void
@@ -30,8 +27,7 @@ final class SelectTest extends TestCase
         $expected = new OdataQueryParser\OdataQuery(["name", "type", "userId"]);
         $actual = OdataQueryParser\OdataQueryParser::parse('https://example.com/?select=name,type,userId', false);
 
-        $this->assertEquals($expected, $actual);
-        $this->assertEquals($expected->getSelect(), $actual?->getSelect());
+        $this->assertOdataQuerySame($expected, $actual);
     }
 
     public function testShouldReturnTheColumnsIfFilledWithSpacesInNonDollarMode(): void
@@ -39,8 +35,7 @@ final class SelectTest extends TestCase
         $expected = new OdataQueryParser\OdataQuery(["name", "type", "userId"]);
         $actual = OdataQueryParser\OdataQueryParser::parse('https://example.com/api/user?select=%20name,%20type%20,userId%20', false);
 
-        $this->assertEquals($expected, $actual);
-        $this->assertEquals($expected->getSelect(), $actual?->getSelect());
+        $this->assertOdataQuerySame($expected, $actual);
     }
 
     public function testShouldReturnAnEmptyArrayIfNoColumnFound(): void
@@ -48,8 +43,7 @@ final class SelectTest extends TestCase
         $expected = new OdataQueryParser\OdataQuery();
         $actual = OdataQueryParser\OdataQueryParser::parse('https://example.com/?$select=');
 
-        $this->assertEquals($expected->getSelect(), $actual?->getSelect());
-        $this->assertEquals($expected, $actual);
+        $this->assertOdataQuerySame($expected, $actual);
     }
 
     public function testShouldReturnAnEmptyArrayIfNoColumnFoundInNonDollarMode(): void
@@ -57,7 +51,6 @@ final class SelectTest extends TestCase
         $expected = new OdataQueryParser\OdataQuery();
         $actual = OdataQueryParser\OdataQueryParser::parse('https://example.com/?select=');
 
-        $this->assertEquals($expected, $actual);
-        $this->assertEquals($expected->getSelect(), $actual?->getSelect());
+        $this->assertOdataQuerySame($expected, $actual);
     }
 }

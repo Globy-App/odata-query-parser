@@ -4,9 +4,8 @@ namespace OdataQueryParserTests;
 
 use GlobyApp\OdataQueryParser;
 use InvalidArgumentException;
-use PHPUnit\Framework\TestCase;
 
-final class ParseTest extends TestCase {
+final class ParseTest extends BaseTestCase {
 	public function testShouldReturnExceptionIfUrlIsEmpty(): void {
 		$this->expectException(InvalidArgumentException::class);
 		$this->expectExceptionMessage("URL should be a valid, full URL");
@@ -35,12 +34,6 @@ final class ParseTest extends TestCase {
         ]);
         $actual = OdataQueryParser\OdataQueryParser::parse('https://example.com/api/user?$select=firstName,lastName&$orderby=id&$top=10&$skip=10');
 
-        $this->assertEquals($expected, $actual);
-        $this->assertEquals($expected->getSelect(), $actual?->getSelect());
-        $this->assertEquals($expected->getCount(), $actual?->getCount());
-        $this->assertEquals($expected->getTop(), $actual?->getTop());
-        $this->assertEquals($expected->getSkip(), $actual?->getSkip());
-        $this->assertEquals($expected->getOrderBy(), $actual?->getOrderBy());
-        $this->assertEquals($expected->getFilter(), $actual?->getFilter());
+        $this->assertOdataQuerySame($expected, $actual);
     }
 }

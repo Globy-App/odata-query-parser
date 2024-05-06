@@ -4,9 +4,8 @@ namespace OdataQueryParserTests;
 
 use GlobyApp\OdataQueryParser;
 use InvalidArgumentException;
-use PHPUnit\Framework\TestCase;
 
-final class SkipTest extends TestCase
+final class SkipTest extends BaseTestCase
 {
     public function testShouldThrowAnInvalidArgumentExceptionIfSkipParameterIsLowerThanZero(): void
     {
@@ -29,8 +28,7 @@ final class SkipTest extends TestCase
         $expected = new OdataQueryParser\OdataQuery([], null, null, 42);
         $actual = OdataQueryParser\OdataQueryParser::parse('https://example.com/api/user?$skip=42');
 
-        $this->assertEquals($expected, $actual);
-        $this->assertEquals($expected->getSkip(), $actual?->getSkip());
+        $this->assertOdataQuerySame($expected, $actual);
     }
 
     public function testShouldContainTheSkipValueIfProvidedInTheQueryParameterAndFilledWithSpaces(): void
@@ -38,8 +36,7 @@ final class SkipTest extends TestCase
         $expected = new OdataQueryParser\OdataQuery([], null, null, 42);
         $actual = OdataQueryParser\OdataQueryParser::parse('https://example.com/api/user?$skip=%2042%20');
 
-        $this->assertEquals($expected, $actual);
-        $this->assertEquals($expected->getSkip(), $actual?->getSkip());
+        $this->assertOdataQuerySame($expected, $actual);
     }
 
     public function testShouldContainAnEmptyArrayIfSkipParameterIsEmpty(): void
@@ -47,8 +44,7 @@ final class SkipTest extends TestCase
         $expected = new OdataQueryParser\OdataQuery();
         $actual = OdataQueryParser\OdataQueryParser::parse('https://example.com/api/user?$skip=');
 
-        $this->assertEquals($expected, $actual);
-        $this->assertEquals($expected->getSkip(), $actual?->getSkip());
+        $this->assertOdataQuerySame($expected, $actual);
     }
 
     public function testShouldNotThrowExceptionIfSkipIsEqualToZero(): void
@@ -56,8 +52,15 @@ final class SkipTest extends TestCase
         $expected = new OdataQueryParser\OdataQuery([], null, null, 0);
         $actual = OdataQueryParser\OdataQueryParser::parse('https://example.com/api/user?$skip=0');
 
-        $this->assertEquals($expected, $actual);
-        $this->assertEquals($expected->getSkip(), $actual?->getSkip());
+        $this->assertOdataQuerySame($expected, $actual);
+    }
+
+    public function testShouldNotThrowExceptionIfSkipIsEqualToZeroWithSpace(): void
+    {
+        $expected = new OdataQueryParser\OdataQuery([], null, null, 0);
+        $actual = OdataQueryParser\OdataQueryParser::parse('https://example.com/api/user?$skip=%200');
+
+        $this->assertOdataQuerySame($expected, $actual);
     }
 
     public function testShouldReturnAnIntegerForTheSkipValue(): void
@@ -86,8 +89,7 @@ final class SkipTest extends TestCase
         $expected = new OdataQueryParser\OdataQuery([], null, null, 42);
         $actual = OdataQueryParser\OdataQueryParser::parse('https://example.com/api/user?skip=42', false);
 
-        $this->assertEquals($expected, $actual);
-        $this->assertEquals($expected->getSkip(), $actual?->getSkip());
+        $this->assertOdataQuerySame($expected, $actual);
     }
 
     public function testShouldContainTheSkipValueIfProvidedInTheQueryParameterAndFilledWithSpacesInNonDollarMode(): void
@@ -95,8 +97,7 @@ final class SkipTest extends TestCase
         $expected = new OdataQueryParser\OdataQuery([], null, null, 42);
         $actual = OdataQueryParser\OdataQueryParser::parse('https://example.com/api/user?skip=%2042%20', false);
 
-        $this->assertEquals($expected, $actual);
-        $this->assertEquals($expected->getSkip(), $actual?->getSkip());
+        $this->assertOdataQuerySame($expected, $actual);
     }
 
     public function testShouldContainAnEmptyArrayIfSkipParameterIsEmptyInNonDollarMode(): void
@@ -104,7 +105,6 @@ final class SkipTest extends TestCase
         $expected = new OdataQueryParser\OdataQuery();
         $actual = OdataQueryParser\OdataQueryParser::parse('https://example.com/api/user?skip=', false);
 
-        $this->assertEquals($expected, $actual);
-        $this->assertEquals($expected->getSkip(), $actual?->getSkip());
+        $this->assertOdataQuerySame($expected, $actual);
     }
 }

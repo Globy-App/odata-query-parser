@@ -4,9 +4,8 @@ namespace OdataQueryParserTests;
 
 use GlobyApp\OdataQueryParser;
 use InvalidArgumentException;
-use PHPUnit\Framework\TestCase;
 
-final class TopTest extends TestCase
+final class TopTest extends BaseTestCase
 {
     public function testShouldThrowAnInvalidArgumentExceptionIfTopQueryParameterIsLowerThanZero(): void
     {
@@ -21,8 +20,7 @@ final class TopTest extends TestCase
         $expected = new OdataQueryParser\OdataQuery([], null, 0);
         $actual = OdataQueryParser\OdataQueryParser::parse('https://example.com/api/user/?$top=0');
 
-        $this->assertEquals($expected, $actual);
-        $this->assertEquals($expected->getTop(), $actual?->getTop());
+        $this->assertOdataQuerySame($expected, $actual);
     }
 
     public function testShouldThrowAnExceptionIfTopQueryParameterIsLowerThanZeroAndFilledWithSpaces(): void
@@ -46,8 +44,7 @@ final class TopTest extends TestCase
         $expected = new OdataQueryParser\OdataQuery([], null, 42);
         $actual = OdataQueryParser\OdataQueryParser::parse('https://example.com/?$top=42');
 
-        $this->assertEquals($expected, $actual);
-        $this->assertEquals($expected->getTop(), $actual?->getTop());
+        $this->assertOdataQuerySame($expected, $actual);
     }
 
     public function testShouldReturnAnIntegerTopValue(): void
@@ -60,7 +57,14 @@ final class TopTest extends TestCase
         $expected = new OdataQueryParser\OdataQuery([], null, 42);
         $actual = OdataQueryParser\OdataQueryParser::parse('https://example.com/api/user?$top=%2042%20');
 
-        $this->assertEquals($expected, $actual);
-        $this->assertEquals($expected->getTop(), $actual?->getTop());
+        $this->assertOdataQuerySame($expected, $actual);
+    }
+
+    public function testShouldReturnNullIfTopIsEmpty(): void
+    {
+        $expected = new OdataQueryParser\OdataQuery();
+        $actual = OdataQueryParser\OdataQueryParser::parse('https://example.com/api/user?$top=%20');
+
+        $this->assertOdataQuerySame($expected, $actual);
     }
 }

@@ -4,9 +4,8 @@ namespace OdataQueryParserTests;
 
 use GlobyApp\OdataQueryParser;
 use InvalidArgumentException;
-use PHPUnit\Framework\TestCase;
 
-final class OrderByTest extends TestCase
+final class OrderByTest extends BaseTestCase
 {
     public function testShouldReturnThePropertyInTheOrderBy(): void
     {
@@ -15,8 +14,7 @@ final class OrderByTest extends TestCase
         ]);
         $actual = OdataQueryParser\OdataQueryParser::parse('https://example.com/api/user?$orderby=foo');
 
-        $this->assertEquals($expected, $actual);
-        $this->assertEquals($expected->getOrderBy(), $actual?->getOrderBy());
+        $this->assertOdataQuerySame($expected, $actual);
     }
 
     public function testShouldReturnAllThePropertiesInTheOrderBy(): void
@@ -27,8 +25,7 @@ final class OrderByTest extends TestCase
         ]);
         $actual = OdataQueryParser\OdataQueryParser::parse('https://example.com/api/user?$orderby=foo,bar');
 
-        $this->assertEquals($expected, $actual);
-        $this->assertEquals($expected->getOrderBy(), $actual?->getOrderBy());
+        $this->assertOdataQuerySame($expected, $actual);
     }
 
     public function testShouldReturnThePropertyInTheOrderByEvenIfFilledWithSpaces(): void
@@ -38,8 +35,7 @@ final class OrderByTest extends TestCase
         ]);
         $actual = OdataQueryParser\OdataQueryParser::parse('https://example.com/api/user?$orderby=%20foo%20');
 
-        $this->assertEquals($expected, $actual);
-        $this->assertEquals($expected->getOrderBy(), $actual?->getOrderBy());
+        $this->assertOdataQuerySame($expected, $actual);
     }
 
     public function testShouldReturnAnEmptyArrayIfOrderByIsEmpty(): void
@@ -47,8 +43,7 @@ final class OrderByTest extends TestCase
         $expected = new OdataQueryParser\OdataQuery();
         $actual = OdataQueryParser\OdataQueryParser::parse('https://example.com/api/user?$orderby=');
 
-        $this->assertEquals($expected, $actual);
-        $this->assertEquals($expected->getOrderBy(), $actual?->getOrderBy());
+        $this->assertOdataQuerySame($expected, $actual);
     }
 
     public function testShouldReturnOrderByPropertyInAscDirectionIfSpecified(): void
@@ -58,8 +53,7 @@ final class OrderByTest extends TestCase
         ]);
         $actual = OdataQueryParser\OdataQueryParser::parse('https://example.com/api/user?$orderby=foo%20asc');
 
-        $this->assertEquals($expected, $actual);
-        $this->assertEquals($expected->getOrderBy(), $actual?->getOrderBy());
+        $this->assertOdataQuerySame($expected, $actual);
     }
 
     public function testShouldReturnOrderByPropertyInAscDirectionIfSpecifiedEvenIfFilledWithSpaces(): void
@@ -69,8 +63,7 @@ final class OrderByTest extends TestCase
         ]);
         $actual = OdataQueryParser\OdataQueryParser::parse('https://example.com/api/user?$orderby=%20foo%20%20%20asc%20');
 
-        $this->assertEquals($expected, $actual);
-        $this->assertEquals($expected->getOrderBy(), $actual?->getOrderBy());
+        $this->assertOdataQuerySame($expected, $actual);
     }
 
     public function testShouldReturnThePropertyInDescDirectionIfSpecified(): void
@@ -80,8 +73,7 @@ final class OrderByTest extends TestCase
         ]);
         $actual = OdataQueryParser\OdataQueryParser::parse('https://example.com/api/user?$orderby=foo%20desc');
 
-        $this->assertEquals($expected, $actual);
-        $this->assertEquals($expected->getOrderBy(), $actual?->getOrderBy());
+        $this->assertOdataQuerySame($expected, $actual);
     }
 
     public function testShouldReturnThePropertyInDescDirectionIfSpecifiedEvenIfFilledWithSpaces(): void
@@ -91,8 +83,7 @@ final class OrderByTest extends TestCase
         ]);
         $actual = OdataQueryParser\OdataQueryParser::parse('https://example.com/api/user?$orderby=%20foo%20%20%20desc%20');
 
-        $this->assertEquals($expected, $actual);
-        $this->assertEquals($expected->getOrderBy(), $actual?->getOrderBy());
+        $this->assertOdataQuerySame($expected, $actual);
     }
 
     public function testShouldThrowExceptionIfDirectionInvalid(): void
@@ -110,8 +101,7 @@ final class OrderByTest extends TestCase
         ]);
         $actual = OdataQueryParser\OdataQueryParser::parse('https://example.com/api/user?orderby=foo', false);
 
-        $this->assertEquals($expected, $actual);
-        $this->assertEquals($expected->getOrderBy(), $actual?->getOrderBy());
+        $this->assertOdataQuerySame($expected, $actual);
     }
 
     public function testShouldReturnThePropertyInTheOrderByInNonDollarModeEvenIfFilledWithSpaces(): void
@@ -121,8 +111,7 @@ final class OrderByTest extends TestCase
         ]);
         $actual = OdataQueryParser\OdataQueryParser::parse('https://example.com/api/user?orderby=%20foo%20', false);
 
-        $this->assertEquals($expected, $actual);
-        $this->assertEquals($expected->getOrderBy(), $actual?->getOrderBy());
+        $this->assertOdataQuerySame($expected, $actual);
     }
 
     public function testShouldReturnAnEmptyArrayIfOrderByIsEmptyInNonDollarMode(): void
@@ -130,8 +119,7 @@ final class OrderByTest extends TestCase
         $expected = new OdataQueryParser\OdataQuery();
         $actual = OdataQueryParser\OdataQueryParser::parse('https://example.com/api/user?orderby=', false);
 
-        $this->assertEquals($expected, $actual);
-        $this->assertEquals($expected->getOrderBy(), $actual?->getOrderBy());
+        $this->assertOdataQuerySame($expected, $actual);
     }
 
     public function testShouldReturnOrderByPropertyInAscDirectionIfSpecifiedInNonDollarMode(): void
@@ -141,8 +129,7 @@ final class OrderByTest extends TestCase
         ]);
         $actual = OdataQueryParser\OdataQueryParser::parse('https://example.com/api/user?orderby=foo%20asc', false);
 
-        $this->assertEquals($expected, $actual);
-        $this->assertEquals($expected->getOrderBy(), $actual?->getOrderBy());
+        $this->assertOdataQuerySame($expected, $actual);
     }
 
     public function testShouldReturnOrderByPropertyInAscDirectionIfSpecifiedInNonDollarModeEvenIfFilledWithSpaces(): void
@@ -152,8 +139,7 @@ final class OrderByTest extends TestCase
         ]);
         $actual = OdataQueryParser\OdataQueryParser::parse('https://example.com/api/user?orderby=%20foo%20%20%20asc%20', false);
 
-        $this->assertEquals($expected, $actual);
-        $this->assertEquals($expected->getOrderBy(), $actual?->getOrderBy());
+        $this->assertOdataQuerySame($expected, $actual);
     }
 
     public function testShouldReturnThePropertyInDescDirectionIfSpecifiedInNonDollarMode(): void
@@ -163,8 +149,7 @@ final class OrderByTest extends TestCase
         ]);
         $actual = OdataQueryParser\OdataQueryParser::parse('https://example.com/api/user?orderby=foo%20desc', false);
 
-        $this->assertEquals($expected, $actual);
-        $this->assertEquals($expected->getOrderBy(), $actual?->getOrderBy());
+        $this->assertOdataQuerySame($expected, $actual);
     }
 
     public function testShouldReturnThePropertyInDescDirectionIfSpecifiedInNonDollarModeEvenIfFilledWithSpaces(): void
@@ -174,8 +159,7 @@ final class OrderByTest extends TestCase
         ]);
         $actual = OdataQueryParser\OdataQueryParser::parse('https://example.com/api/user?orderby=%20foo%20%20%20desc%20', false);
 
-        $this->assertEquals($expected, $actual);
-        $this->assertEquals($expected->getOrderBy(), $actual?->getOrderBy());
+        $this->assertOdataQuerySame($expected, $actual);
     }
 
     public function testShouldThrowExceptionIfDirectionInvalidInNonDollarMode(): void

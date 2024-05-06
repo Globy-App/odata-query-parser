@@ -175,7 +175,7 @@ class OdataQueryParser
         }
 
         // Trim can only be used on a string and count. At this point, the value has not been cast to a native datatype
-        if (empty(trim($queryString[$key]))) {
+        if (empty(trim($queryString[$key])) && trim($queryString[$key]) !== '0') {
             return false;
         }
 

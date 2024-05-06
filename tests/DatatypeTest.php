@@ -6,9 +6,8 @@ use GlobyApp\OdataQueryParser\Datatype\FilterClause;
 use GlobyApp\OdataQueryParser\Datatype\OrderByClause;
 use GlobyApp\OdataQueryParser\Enum\FilterOperator;
 use GlobyApp\OdataQueryParser\Enum\OrderDirection;
-use PHPUnit\Framework\TestCase;
 
-class DatatypeTest extends TestCase
+class DatatypeTest extends BaseTestCase
 {
     public function testFilterClauseContinuitySingleValue(): void
     {
