@@ -76,7 +76,7 @@ class OdataQueryParser
      * @return string|null The query string from the input URL. Null if there is no query string.
      * @throws InvalidArgumentException The URL is malformed and the query string could not be extracted
      */
-    private static function extractQueryString(string $url): ?string
+    protected static function extractQueryString(string $url): ?string
     {
         $queryString = parse_url($url, PHP_URL_QUERY);
 
@@ -99,7 +99,7 @@ class OdataQueryParser
      *
      * @return array<string, string> The components of the query string, split up into an array
      */
-    private static function parseQueryString(string $queryString): array
+    public static function parseQueryString(string $queryString): array
     {
         $result = [];
         parse_str($queryString, $result);
@@ -140,7 +140,7 @@ class OdataQueryParser
      *
      * @return string The key with or without dollar sign prepended
      */
-    private static function buildKeyConstant(string $key, bool $withDollar): string
+    protected static function buildKeyConstant(string $key, bool $withDollar): string
     {
         return $withDollar ? '$'.$key : $key;
     }
@@ -153,7 +153,7 @@ class OdataQueryParser
      *
      * @return bool Whether the odata key is present in the input query string
      */
-    private static function hasKey(string $key, array $queryString): bool
+    protected static function hasKey(string $key, array $queryString): bool
     {
         return array_key_exists($key, $queryString);
     }
@@ -352,7 +352,8 @@ class OdataQueryParser
 
         return array_map(function (string $clause): FilterClause {
             $clauseParts = [];
-            mb_ereg("(\w+)\s*([engliENGLI][qetnQETN])\s*([\w',()\s.]+)", $clause, $clauseParts);
+            mb_ereg("([\w\W]+)\s*([engliENGLI][qetnQETN])\s*([\w',()\s.]+)", $clause, $clauseParts);
+
 
             /** Determine whether there are 4 array keys present in the result:
              * $clauseParts[0]: the entire input string
@@ -366,7 +367,7 @@ class OdataQueryParser
 
             $operator = self::parseFilterOperator($clauseParts[2]);
             $value = self::getFilterRightValue($clauseParts[3], $operator);
-            return new FilterClause($clauseParts[1], $operator, $value);
+            return new FilterClause(trim($clauseParts[1]), $operator, $value);
         }, $filterParts);
     }
 
