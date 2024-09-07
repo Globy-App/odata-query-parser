@@ -147,8 +147,10 @@ FilterClause {
   - If the `$count` query string value is not a boolean
   - If the formatting of `$orderby` is not valid (should be a property, space and the direction)
   - If the direction of the `$orderby` query string value is neither `asc` or `desc` (case-insensitive)
+    - This will throw an InvalidDirectionException, inheriting InvalidArgumentException.
   - If the formatting of `$filter` is not valid (should be a property, space, operator, space and value)
   - If the operator of the `$filter` query string value is not `eq`, `ne`, `gt`, `ge`, `lt`, `le` or `in` (case-insensitive)
+    - This will throw an InvalidFilterOperatorException, inheriting InvalidArgumentException.
 - `LogicException`
   - If an unforeseen edge case is triggered by an input value. For example when a regex operation fails. Should never be thrown under normal operation.
     - If an edge case is found, please report them as an issue. Currently, I cannot write test cases for them as I don't know how to trigger them.
