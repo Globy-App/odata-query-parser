@@ -276,7 +276,7 @@ final class FilterTest extends BaseTestCase
         $expected = new OdataQueryParser\OdataQuery([], null, null, null, [], [
             new OdataQueryParser\Datatype\FilterClause('name.bar', OdataQueryParser\Enum\FilterOperator::EQUALS, 'foo'),
         ]);
-        $actual = OdataQueryParser\OdataQueryParser::parse("https://example.com/api/user?\$filter=name.bar%20eQ%20%27foo%27");
+        $actual = OdataQueryParser\OdataQueryParser::parse("https://example.com/api/user?\$filter=name.bar%20eq%20%27foo%27");
 
         $this->assertOdataQuerySame($expected, $actual);
     }
@@ -286,7 +286,7 @@ final class FilterTest extends BaseTestCase
         $expected = new OdataQueryParser\OdataQuery([], null, null, null, [], [
             new OdataQueryParser\Datatype\FilterClause('name/bar', OdataQueryParser\Enum\FilterOperator::EQUALS, 'foo'),
         ]);
-        $actual = OdataQueryParser\OdataQueryParser::parse("https://example.com/api/user?\$filter=name%2Fbar%20eQ%20%27foo%27");
+        $actual = OdataQueryParser\OdataQueryParser::parse("https://example.com/api/user?\$filter=name%2Fbar%20eq%20%27foo%27");
 
         $this->assertOdataQuerySame($expected, $actual);
     }
@@ -296,7 +296,7 @@ final class FilterTest extends BaseTestCase
         $expected = new OdataQueryParser\OdataQuery([], null, null, null, [], [
             new OdataQueryParser\Datatype\FilterClause('name\bar', OdataQueryParser\Enum\FilterOperator::EQUALS, 'foo'),
         ]);
-        $actual = OdataQueryParser\OdataQueryParser::parse("https://example.com/api/user?\$filter=name%5Cbar%20eQ%20%27foo%27");
+        $actual = OdataQueryParser\OdataQueryParser::parse("https://example.com/api/user?\$filter=name%5Cbar%20eq%20%27foo%27");
 
         $this->assertOdataQuerySame($expected, $actual);
     }
@@ -306,7 +306,7 @@ final class FilterTest extends BaseTestCase
         $expected = new OdataQueryParser\OdataQuery([], null, null, null, [], [
             new OdataQueryParser\Datatype\FilterClause('name-bar', OdataQueryParser\Enum\FilterOperator::EQUALS, 'foo'),
         ]);
-        $actual = OdataQueryParser\OdataQueryParser::parse("https://example.com/api/user?\$filter=name-bar%20eQ%20%27foo%27");
+        $actual = OdataQueryParser\OdataQueryParser::parse("https://example.com/api/user?\$filter=name-bar%20eq%20%27foo%27");
 
         $this->assertOdataQuerySame($expected, $actual);
     }
@@ -316,7 +316,7 @@ final class FilterTest extends BaseTestCase
         $expected = new OdataQueryParser\OdataQuery([], null, null, null, [], [
             new OdataQueryParser\Datatype\FilterClause('name_bar', OdataQueryParser\Enum\FilterOperator::EQUALS, 'foo'),
         ]);
-        $actual = OdataQueryParser\OdataQueryParser::parse("https://example.com/api/user?\$filter=name_bar%20eQ%20%27foo%27");
+        $actual = OdataQueryParser\OdataQueryParser::parse("https://example.com/api/user?\$filter=name_bar%20eq%20%27foo%27");
 
         $this->assertOdataQuerySame($expected, $actual);
     }
@@ -326,7 +326,7 @@ final class FilterTest extends BaseTestCase
         $expected = new OdataQueryParser\OdataQuery([], null, null, null, [], [
             new OdataQueryParser\Datatype\FilterClause('bår', OdataQueryParser\Enum\FilterOperator::EQUALS, 'foo'),
         ]);
-        $actual = OdataQueryParser\OdataQueryParser::parse("https://example.com/api/user?\$filter=b%C3%A5r%20eQ%20%27foo%27");
+        $actual = OdataQueryParser\OdataQueryParser::parse("https://example.com/api/user?\$filter=b%C3%A5r%20eq%20%27foo%27");
 
         $this->assertOdataQuerySame($expected, $actual);
     }
@@ -336,7 +336,37 @@ final class FilterTest extends BaseTestCase
         $expected = new OdataQueryParser\OdataQuery([], null, null, null, [], [
             new OdataQueryParser\Datatype\FilterClause('name7378', OdataQueryParser\Enum\FilterOperator::EQUALS, 'foo'),
         ]);
-        $actual = OdataQueryParser\OdataQueryParser::parse("https://example.com/api/user?\$filter=name7378%20eQ%20%27foo%27");
+        $actual = OdataQueryParser\OdataQueryParser::parse("https://example.com/api/user?\$filter=name7378%20eq%20%27foo%27");
+
+        $this->assertOdataQuerySame($expected, $actual);
+    }
+
+    public function testPropertyPrecedingTrim(): void
+    {
+        $expected = new OdataQueryParser\OdataQuery([], null, null, null, [], [
+            new OdataQueryParser\Datatype\FilterClause('bar', OdataQueryParser\Enum\FilterOperator::EQUALS, 'foo'),
+        ]);
+        $actual = OdataQueryParser\OdataQueryParser::parse("https://example.com/api/user?\$filter=%20bar%20eq%20%27foo%27");
+
+        $this->assertOdataQuerySame($expected, $actual);
+    }
+
+    public function testPropertySucceedingTrim(): void
+    {
+        $expected = new OdataQueryParser\OdataQuery([], null, null, null, [], [
+            new OdataQueryParser\Datatype\FilterClause('bar', OdataQueryParser\Enum\FilterOperator::EQUALS, 'foo'),
+        ]);
+        $actual = OdataQueryParser\OdataQueryParser::parse("https://example.com/api/user?\$filter=bar%20%20eq%20%27foo%27");
+
+        $this->assertOdataQuerySame($expected, $actual);
+    }
+
+    public function testPropertyTrim(): void
+    {
+        $expected = new OdataQueryParser\OdataQuery([], null, null, null, [], [
+            new OdataQueryParser\Datatype\FilterClause('bar', OdataQueryParser\Enum\FilterOperator::EQUALS, 'foo'),
+        ]);
+        $actual = OdataQueryParser\OdataQueryParser::parse("https://example.com/api/user?\$filter=%20bar%20%20eq%20%27foo%27");
 
         $this->assertOdataQuerySame($expected, $actual);
     }

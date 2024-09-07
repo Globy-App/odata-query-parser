@@ -354,7 +354,6 @@ class OdataQueryParser
             $clauseParts = [];
             mb_ereg("([\w\W]+)\s*([engliENGLI][qetnQETN])\s*([\w',()\s.]+)", $clause, $clauseParts);
 
-
             /** Determine whether there are 4 array keys present in the result:
              * $clauseParts[0]: the entire input string
              * $clauseParts[1]: the left hand side (property)
