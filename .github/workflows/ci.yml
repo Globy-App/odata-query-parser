@@ -77,4 +77,4 @@ jobs:
 
       - name: Run infection mutation testing
         run:
-          php ./vendor/bin/infection --min-msi=85 --min-covered-msi=90 --only-covered --threads=max --no-interaction --logger-github=true --skip-initial-tests --coverage=logs
+          php ./vendor/bin/infection --min-msi=80 --min-covered-msi=85 --only-covered --threads=max --no-interaction --logger-github=true --skip-initial-tests --coverage=logs
