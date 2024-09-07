@@ -370,4 +370,35 @@ final class FilterTest extends BaseTestCase
 
         $this->assertOdataQuerySame($expected, $actual);
     }
+
+    // Tests created on the basis of https://github.com/Globy-App/odata-query-parser/issues/9
+    public function testSucceedingComma(): void
+    {
+        $expected = new OdataQueryParser\OdataQuery([], null, null, null, [], [
+            new OdataQueryParser\Datatype\FilterClause('bar', OdataQueryParser\Enum\FilterOperator::EQUALS, 'open,'),
+        ]);
+        $actual = OdataQueryParser\OdataQueryParser::parse("https://example.com/api/user?\$filter=bar%20eq%20%27open,%27");
+
+        $this->assertOdataQuerySame($expected, $actual);
+    }
+
+    public function testSucceedingCommaUnclosed(): void
+    {
+        $expected = new OdataQueryParser\OdataQuery([], null, null, null, [], [
+            new OdataQueryParser\Datatype\FilterClause('bar', OdataQueryParser\Enum\FilterOperator::EQUALS, 'open,'),
+        ]);
+        $actual = OdataQueryParser\OdataQueryParser::parse("https://example.com/api/user?\$filter=bar%20eq%20%27open,");
+
+        $this->assertOdataQuerySame($expected, $actual);
+    }
+
+    public function testParseWithOperatorInValue(): void
+    {
+        $expected = new OdataQueryParser\OdataQuery([], null, null, null, [], [
+            new OdataQueryParser\Datatype\FilterClause('bar', OdataQueryParser\Enum\FilterOperator::IN, ['open','closed']),
+        ]);
+        $actual = OdataQueryParser\OdataQueryParser::parse("https://example.com/api/user?\$filter=bar%20in%20(%27open%27,%27closed%27)");
+
+        $this->assertOdataQuerySame($expected, $actual);
+    }
 }
