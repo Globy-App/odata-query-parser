@@ -49,7 +49,7 @@ final class TopTest extends BaseTestCase
 
     public function testShouldReturnAnIntegerTopValue(): void
     {
-        $this->assertIsInt(OdataQueryParser\OdataQueryParser::parse('https://example.com/api/user?$top=42')?->getTop());
+        $this->assertIsInt(OdataQueryParser\OdataQueryParser::parse('https://example.com/api/user?$top=42')->getTop());
     }
 
     public function testShouldReturnTheTopValueIfProvidedInTheQueryParametersAndFilledWithSpaces(): void

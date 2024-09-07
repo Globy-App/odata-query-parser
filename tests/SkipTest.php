@@ -65,7 +65,7 @@ final class SkipTest extends BaseTestCase
 
     public function testShouldReturnAnIntegerForTheSkipValue(): void
     {
-        $this->assertIsInt(OdataQueryParser\OdataQueryParser::parse('https://example.com/api/user?$skip=42')?->getSkip());
+        $this->assertIsInt(OdataQueryParser\OdataQueryParser::parse('https://example.com/api/user?$skip=42')->getSkip());
     }
 
     public function testShouldThrowAnInvalidArgumentExceptionIfSkipParameterIsLowerThanZeroInNonDollarMode(): void

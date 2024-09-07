@@ -43,12 +43,12 @@ final class FilterTest extends BaseTestCase
 
     public function testShouldReturnEqualClauseWithFloat(): void
     {
-        $this->assertIsFloat(OdataQueryParser\OdataQueryParser::parse("https://example.com/api/user?\$filter=age%20eq%2042.42")?->getFilter()[0]->getValue());
+        $this->assertIsFloat(OdataQueryParser\OdataQueryParser::parse("https://example.com/api/user?\$filter=age%20eq%2042.42")->getFilter()[0]->getValue());
     }
 
     public function testShouldReturnEqualClauseWithInteger(): void
     {
-        $this->assertIsInt(OdataQueryParser\OdataQueryParser::parse("https://example.com/api/user?\$filter=age%20eq%2042")?->getFilter()[0]->getValue());
+        $this->assertIsInt(OdataQueryParser\OdataQueryParser::parse("https://example.com/api/user?\$filter=age%20eq%2042")->getFilter()[0]->getValue());
     }
 
     public function testShouldReturnEqualClauseWithSpacedStrings(): void
@@ -220,7 +220,7 @@ final class FilterTest extends BaseTestCase
 
     public function testShouldReturnFloatIfCheckingInFloat(): void
     {
-        $inArray = OdataQueryParser\OdataQueryParser::parse("https://example.com/api/user?\$filter=taxRate%20in%20(19.5,%2020)")?->getFilter()[0]->getValue();
+        $inArray = OdataQueryParser\OdataQueryParser::parse("https://example.com/api/user?\$filter=taxRate%20in%20(19.5,%2020)")->getFilter()[0]->getValue();
         $this->assertIsArray($inArray);
         $this->assertArrayHasKey(0, $inArray);
         $this->assertIsFloat($inArray[0]);
@@ -228,13 +228,13 @@ final class FilterTest extends BaseTestCase
 
     public function testBooleanTrueValue(): void
     {
-        $bool = OdataQueryParser\OdataQueryParser::parse("https://example.com/api/user?\$filter=taxRate%20eq%20true")?->getFilter()[0]->getValue();
+        $bool = OdataQueryParser\OdataQueryParser::parse("https://example.com/api/user?\$filter=taxRate%20eq%20true")->getFilter()[0]->getValue();
         $this->assertTrue($bool);
     }
 
     public function testBooleanFalseValue(): void
     {
-        $bool = OdataQueryParser\OdataQueryParser::parse("https://example.com/api/user?\$filter=taxRate%20eq%20false")?->getFilter()[0]->getValue();
+        $bool = OdataQueryParser\OdataQueryParser::parse("https://example.com/api/user?\$filter=taxRate%20eq%20false")->getFilter()[0]->getValue();
         $this->assertFalse($bool);
     }
 

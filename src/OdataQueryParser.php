@@ -8,6 +8,8 @@ use GlobyApp\OdataQueryParser\Datatype\FilterClause;
 use GlobyApp\OdataQueryParser\Datatype\OrderByClause;
 use GlobyApp\OdataQueryParser\Enum\FilterOperator;
 use GlobyApp\OdataQueryParser\Enum\OrderDirection;
+use GlobyApp\OdataQueryParser\Exceptions\InvalidDirectionException;
+use GlobyApp\OdataQueryParser\Exceptions\InvalidFilterOperatorException;
 use InvalidArgumentException;
 use LogicException;
 
@@ -37,10 +39,10 @@ class OdataQueryParser
      * @param string $url The URL to parse the query strings from. It should be a "complete" or "full" URL
      * @param bool $withDollar When set to false, parses the odata keys without requiring the $ in front of odata keys
      *
-     * @return OdataQuery|null OdataQuery object, parsed version of the input url, or null, if there is no query string
+     * @return OdataQuery OdataQuery object, parsed version of the input url
      * @throws InvalidArgumentException The URL, or parts of it are malformed and could not be processed
      */
-    public static function parse(string $url, bool $withDollar = true): ?OdataQuery
+    public static function parse(string $url, bool $withDollar = true): OdataQuery
     {
         // Verify the URL is valid
         if (filter_var($url, FILTER_VALIDATE_URL) === false) {
@@ -51,7 +53,7 @@ class OdataQueryParser
         $queryString = self::extractQueryString($url);
         if ($queryString === null) {
             // There is no query string, so there cannot be a result
-            return null;
+            return new OdataQuery();
         }
 
         $parsedQueryString = self::parseQueryString($queryString);
@@ -285,7 +287,7 @@ class OdataQueryParser
      * @param array<string, string> $queryString The query string to get the order by clauses from
      *
      * @return OrderByClause[] The parsed order by clauses
-     * @throws InvalidArgumentException If the direction is not asc or desc, or the clause split found a clause that was incorrectly formed
+     * @throws InvalidFilterOperatorException If the direction is not asc or desc, or the clause split found a clause that was incorrectly formed
      */
     private static function getOrderBy(array $queryString): array
     {
@@ -322,14 +324,14 @@ class OdataQueryParser
      * @param string $direction The string representation of the order direction
      *
      * @return OrderDirection The parsed order direction
-     * @throws InvalidArgumentException If the direction is not asc or desc
+     * @throws InvalidDirectionException If the direction is not asc or desc
      */
     private static function parseDirection(string $direction): OrderDirection
     {
         return match (strtolower($direction)) {
             "asc" => OrderDirection::ASC,
             "desc" => OrderDirection::DESC,
-            default => throw new InvalidArgumentException("Direction should be either asc or desc"),
+            default => throw new InvalidDirectionException("Direction should be either asc or desc"),
         };
     }
 
@@ -339,7 +341,7 @@ class OdataQueryParser
      * @param array<string, string> $queryString The query string to find the filter key in
      *
      * @return FilterClause[] The parsed list of filter clauses
-     * @throws InvalidArgumentException If an invalid operator is found, or the clause split found a clause that was incorrectly formed
+     * @throws InvalidFilterOperatorException If an invalid operator is found, or the clause split found a clause that was incorrectly formed
      */
     private static function getFilter(array $queryString): array
     {
@@ -377,7 +379,7 @@ class OdataQueryParser
      * @param string $operator The string representation of the filter operator
      *
      * @return FilterOperator The parsed filter operator
-     * @throws InvalidArgumentException If the filter operator is not valid
+     * @throws InvalidFilterOperatorException If the filter operator is not valid
      */
     private static function parseFilterOperator(string $operator): FilterOperator
     {
@@ -389,7 +391,7 @@ class OdataQueryParser
             "lt" => FilterOperator::LESS_THAN,
             "le" => FilterOperator::LESS_THAN_EQUALS,
             "in" => FilterOperator::IN,
-            default => throw new InvalidArgumentException("Filter operator should be eq, ne, gt, ge, lt, le or in."),
+            default => throw new InvalidFilterOperatorException("Filter operator should be eq, ne, gt, ge, lt, le or in."),
         };
     }
 

@@ -21,7 +21,7 @@ final class ParseTest extends BaseTestCase {
 	}
 
 	public function testShouldReturnAnEmptyArrayIfNoQueryParameters(): void {
-		$expected = null;
+		$expected = new OdataQueryParser\OdataQuery();
 		$actual = OdataQueryParser\OdataQueryParser::parse("https://example.com");
 
 		$this->assertEquals($expected, $actual);
