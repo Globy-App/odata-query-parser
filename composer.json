@@ -28,8 +28,8 @@
     "friendsofphp/php-cs-fixer": "^3.16",
     "phpstan/phpstan": "^1.10",
     "phpstan/phpstan-deprecation-rules": "^1.1",
-    "vimeo/psalm": "^5.23",
-    "infection/infection": "^0.27.11",
+    "vimeo/psalm": "^6.0.0",
+    "infection/infection": "^0.29.0",
     "ext-simplexml": "*"
   },
   "autoload-dev": {
