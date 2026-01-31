@@ -35,16 +35,12 @@ jobs:
       - name: Install dependencies
         run: composer install --prefer-dist --no-progress
 
-      - name: Run the linter, ignoring that php 8.5 is officially not supported
-        run: PHP_CS_FIXER_IGNORE_ENV=1 php ./vendor/bin/php-cs-fixer fix src --dry-run --allow-risky=yes
-        if: matrix.php-version == '8.5'
-
       - name: Run the linter
         run: php ./vendor/bin/php-cs-fixer fix src --dry-run --allow-risky=yes
-        if: matrix.php-version != '8.5'
 
+      # PHPStan did not mention php 8.5 support yet, assuming it is not supported yet
       - name: Run PHPStan
-        if: success() || failure()
+        if: (success() || failure()) && matrix.php-version != '8.5'
         run: php -d memory_limit=1G ./vendor/bin/phpstan analyse -c phpstan.neon --error-format=github > phpstan.json
 
       - name: Run psalm
@@ -82,4 +78,4 @@ jobs:
 
       - name: Run infection mutation testing
         run:
-          php ./vendor/bin/infection --min-msi=80 --min-covered-msi=85 --only-covered --threads=max --no-interaction --logger-github=true --skip-initial-tests --coverage=logs
+          php ./vendor/bin/infection --min-msi=80 --min-covered-msi=85 --threads=max --no-interaction --logger-github=true --skip-initial-tests --coverage=logs
