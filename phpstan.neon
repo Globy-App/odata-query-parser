@@ -4,6 +4,7 @@ parameters:
     paths:
         - tests
         - examples
+        - src
 
 includes:
     - vendor/phpstan/phpstan-deprecation-rules/rules.neon
