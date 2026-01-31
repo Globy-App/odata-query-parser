@@ -86,11 +86,6 @@ class OdataQueryParser
             throw new InvalidArgumentException("URL could not be parsed. Ensure the URL is not malformed.");
         }
 
-        // The URL query string parser should return a string or null query string
-        if (!($queryString === null || is_string($queryString))) {
-            throw new InvalidArgumentException("URL query string should be a string.");
-        }
-
         return $queryString;
     }
 
